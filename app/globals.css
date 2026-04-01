@@ -1,0 +1,298 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,300;1,400&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Custom Properties ──────────────────────────────────────── */
+:root {
+  --obsidian: #000000;
+  --electric-blue: #3b82f6;
+  --royal-purple: #d1bcff;
+  --ruby-red: #ffb2be;
+  --surface-lowest: #0e0e0e;
+  --surface-low: #1b1b1b;
+  --surface: #131313;
+  --surface-container: #1f1f1f;
+  --surface-container-high: #2a2a2a;
+  --surface-container-highest: #353535;
+  --outline: #8b91a0;
+  --outline-variant: #414754;
+}
+
+/* ── Base Reset ─────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background-color: #000000;
+  color: #e2e2e2;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* ── Typography Classes ─────────────────────────────────────────── */
+.font-display {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.font-headline {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.font-label {
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ── Glassmorphism Panel ────────────────────────────────────────── */
+.glass-panel {
+  background: rgba(53, 53, 53, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(65, 71, 84, 0.2);
+}
+
+.glass-panel-lg {
+  background: rgba(53, 53, 53, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(65, 71, 84, 0.25);
+}
+
+/* ── Hairline Borders ───────────────────────────────────────────── */
+.hairline-blue {
+  border: 1px solid rgba(171, 199, 255, 0.3);
+}
+
+.hairline-purple {
+  border: 1px solid rgba(209, 188, 255, 0.3);
+}
+
+.hairline-red {
+  border: 1px solid rgba(255, 178, 190, 0.3);
+}
+
+.hairline-dim {
+  border: 1px solid rgba(139, 145, 160, 0.15);
+}
+
+/* ── Neon Glow Effects ──────────────────────────────────────────── */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(171, 199, 255, 0.3), 0 0 60px rgba(171, 199, 255, 0.08);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px rgba(209, 188, 255, 0.3), 0 0 60px rgba(209, 188, 255, 0.08);
+}
+
+.glow-red {
+  box-shadow: 0 0 20px rgba(255, 178, 190, 0.3), 0 0 60px rgba(255, 178, 190, 0.08);
+}
+
+/* ── Status Dot Indicators ──────────────────────────────────────── */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-dot.error {
+  background: var(--ruby-red);
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.status-dot.in_progress {
+  background: var(--royal-purple);
+  box-shadow: 0 0 8px rgba(209, 188, 255, 0.6);
+}
+
+.status-dot.done {
+  background: transparent;
+  border: 1px solid var(--electric-blue);
+}
+
+.status-dot.pending {
+  background: var(--outline);
+  opacity: 0.4;
+}
+
+/* ── Progress Bar ───────────────────────────────────────────────── */
+.progress-track {
+  width: 100%;
+  height: 2px;
+  background: rgba(65, 71, 84, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #448fff, #3b82f6);
+  transition: width 0.6s ease;
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -2px;
+  width: 4px;
+  height: 6px;
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgba(171, 199, 255, 0.8);
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 145, 160, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.4);
+}
+
+/* ── Input Fields ───────────────────────────────────────────────── */
+.obsidian-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--outline);
+  color: #e2e2e2;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  padding: 0.75rem 0;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  letter-spacing: 0.05em;
+}
+
+.obsidian-input:focus {
+  border-bottom-color: var(--electric-blue);
+  box-shadow: 0 1px 0 0 rgba(59, 130, 246, 0.4);
+}
+
+.obsidian-input.error {
+  border-bottom-color: var(--ruby-red);
+  box-shadow: 0 1px 0 0 rgba(255, 178, 190, 0.4);
+}
+
+.obsidian-input::placeholder {
+  color: rgba(139, 145, 160, 0.5);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────── */
+.btn-primary {
+  background: #3b82f6;
+  color: #001a3a;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: none;
+  border-radius: 0;
+  padding: 0.75rem 2rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.2);
+}
+
+.btn-primary:active {
+  transform: scale(0.99);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Fade In Animation ──────────────────────────────────────────── */
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(255, 178, 190, 0.6); }
+  50%       { opacity: 0.6; box-shadow: 0 0 20px rgba(255, 178, 190, 0.9); }
+}
+
+/* ── Priority Badges ────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 0;
+}
+
+.badge-urgent {
+  border: 1px solid rgba(255, 178, 190, 0.5);
+  color: var(--ruby-red);
+  background: rgba(255, 178, 190, 0.05);
+}
+
+.badge-normal {
+  border: 1px solid rgba(209, 188, 255, 0.3);
+  color: var(--royal-purple);
+  background: rgba(209, 188, 255, 0.04);
+}
+
+.badge-someday {
+  border: 1px solid rgba(139, 145, 160, 0.2);
+  color: var(--outline);
+  background: transparent;
+}
+
+.badge-active   { border: 1px solid rgba(59,130,246,0.3); color: var(--electric-blue); background: rgba(59,130,246,0.04); }
+.badge-paused   { border: 1px solid rgba(139,145,160,0.2); color: var(--outline); background: transparent; }
+.badge-done     { border: 1px solid rgba(209,188,255,0.3); color: var(--royal-purple); background: rgba(209,188,255,0.04); }
+.badge-archived { border: 1px solid rgba(65,71,84,0.3); color: #414754; background: transparent; }
