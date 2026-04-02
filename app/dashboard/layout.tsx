@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import ChatWidget from "@/app/dashboard/ChatWidget";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "OVERVIEW", icon: "◈" },
@@ -138,6 +139,8 @@ export default function DashboardLayout({
       <main className="flex-1 overflow-y-auto bg-obsidian">
         {children}
       </main>
+
+      <ChatWidget />
     </div>
   );
 }

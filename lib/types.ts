@@ -1,7 +1,7 @@
 // ── Database Types (matches Supabase schema) ──────────────────────────
 
 export type ProjectPriority = "Urgent" | "Normal" | "Someday";
-export type ProjectAgent = "Claude" | "Emma" | "Both";
+export type ProjectAgent = "Claude" | "Emma" | "Both" | "Dash";
 export type ProjectStatus = "active" | "paused" | "done" | "archived";
 export type StepStatus = "pending" | "in_progress" | "done" | "error";
 
@@ -40,6 +40,14 @@ export interface ProjectLog {
   problems: string | null;
   solutions: string | null;
   archived: boolean;
+  created_at: string;
+}
+
+export interface ProjectLink {
+  id: string;
+  project_id: string;
+  title: string;
+  url: string;
   created_at: string;
 }
 

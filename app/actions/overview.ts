@@ -4,12 +4,32 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+async function recalculateCompletion(projectId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: steps } = await supabase
+    .from("project_steps")
+    .select("status")
+    .eq("project_id", projectId);
+  const total = steps?.length ?? 0;
+  const done = steps?.filter((s: { status: string }) => s.status === "done").length ?? 0;
+  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from("projects") as any).update({ completion_pct: pct }).eq("id", projectId);
+}
+
 export async function deleteProject(id: string): Promise<void> {
   const supabase = await createClient();
   await supabase.from("project_logs").delete().eq("project_id", id);
   await supabase.from("project_steps").delete().eq("project_id", id);
   await supabase.from("projects").delete().eq("id", id);
   redirect("/dashboard/projects");
+}
+
+export async function deleteLink(id: string, projectId: string): Promise<void> {
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from("project_links") as any).delete().eq("id", id);
+  revalidatePath(`/dashboard/projects/${projectId}`);
 }
 
 export async function deleteLog(id: string, projectId: string): Promise<void> {
@@ -22,6 +42,7 @@ export async function deleteLog(id: string, projectId: string): Promise<void> {
 export async function deleteStep(id: string, projectId: string): Promise<void> {
   const supabase = await createClient();
   await supabase.from("project_steps").delete().eq("id", id);
+  await recalculateCompletion(projectId);
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/projects/${projectId}`);
 }
@@ -34,6 +55,7 @@ export async function updateStepStatus(
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase.from("project_steps") as any).update({ status }).eq("id", stepId);
+  await recalculateCompletion(projectId);
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/projects/${projectId}`);
 }
@@ -98,6 +120,7 @@ export async function createStep(
     description: description || null,
     status: "pending",
   });
+  await recalculateCompletion(projectId);
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/projects/${projectId}`);
 }

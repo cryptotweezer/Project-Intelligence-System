@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import type { Project, ProjectStep, ProjectLog } from "@/lib/types";
+import type { Project, ProjectStep, ProjectLog, ProjectLink } from "@/lib/types";
 import DeleteProjectButton from "@/app/dashboard/DeleteProjectButton";
 import DeleteLogButton from "@/app/dashboard/DeleteLogButton";
+import DeleteLinkButton from "@/app/dashboard/DeleteLinkButton";
 import DeleteStepButton from "@/app/dashboard/DeleteStepButton";
 import StepStatusSelect from "@/app/dashboard/StepStatusSelect";
 import CreateStepForm from "@/app/dashboard/CreateStepForm";
@@ -52,7 +53,7 @@ export default async function ProjectDetailPage({
 }) {
   const supabase = await createClient();
 
-  const [{ data: project }, { data: steps }, { data: logs }] = await Promise.all([
+  const [{ data: project }, { data: steps }, { data: logs }, { data: links }] = await Promise.all([
     supabase.from("projects").select("*").eq("id", params.id).single(),
     supabase
       .from("project_steps")
@@ -64,6 +65,11 @@ export default async function ProjectDetailPage({
       .select("*")
       .eq("project_id", params.id)
       .order("session_date", { ascending: false }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("project_links") as any)
+      .select("*")
+      .eq("project_id", params.id)
+      .order("created_at"),
   ]);
 
   if (!project) notFound();
@@ -71,6 +77,7 @@ export default async function ProjectDetailPage({
   const p = project as Project;
   const stepList = (steps ?? []) as ProjectStep[];
   const logList = (logs ?? []) as ProjectLog[];
+  const linkList = (links ?? []) as ProjectLink[];
   const pct = p.completion_pct ?? 0;
   const stepsDone = stepList.filter((s) => s.status === "done").length;
   const stepsPending = stepList.filter((s) => s.status !== "done").length;
@@ -316,6 +323,34 @@ export default async function ProjectDetailPage({
               </div>
             )}
           </div>
+
+          {/* Useful Links */}
+          {linkList.length > 0 && (
+            <div
+              className="p-5"
+              style={{ background: "rgba(14,14,14,0.8)", border: "1px solid rgba(65,71,84,0.2)" }}
+            >
+              <div className="font-label text-outline mb-4" style={{ fontSize: "0.5rem", letterSpacing: "0.2em" }}>
+                USEFUL LINKS
+              </div>
+              <div className="space-y-2">
+                {linkList.map((link) => (
+                  <div key={link.id} className="flex items-center justify-between gap-2">
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-light text-xs hover:text-electric-blue transition-colors duration-150 truncate"
+                      style={{ color: "rgba(59,130,246,0.75)" }}
+                    >
+                      {link.title}
+                    </a>
+                    <DeleteLinkButton linkId={link.id} projectId={p.id} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Danger zone */}
           <div

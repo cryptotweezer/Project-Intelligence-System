@@ -30,3 +30,6 @@ Thumbs.db
 # misc
 *.pem
 .vercel
+
+# local planning notes
+next_steps.md
