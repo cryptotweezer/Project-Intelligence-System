@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ThemeProvider } from "@/app/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Project Intelligence System",
@@ -14,7 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="bg-obsidian text-white antialiased">{children}</body>
+      <body className="bg-obsidian text-white antialiased">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

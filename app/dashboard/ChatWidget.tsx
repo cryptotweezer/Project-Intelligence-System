@@ -121,15 +121,16 @@ export default function ChatWidget() {
           className="animate-fade-in"
           style={{
             position: "absolute",
-            bottom: "64px",
+            bottom: "0",
             right: "0",
-            width: "380px",
-            height: "520px",
-            background: "rgba(10,10,10,0.98)",
-            border: "1px solid rgba(65,71,84,0.35)",
+            width: "min(380px, calc(100vw - 32px))",
+            height: "min(520px, calc(100vh - 100px))",
+            maxHeight: "calc(100vh - 100px)",
+            background: "var(--bg-chat)",
+            border: "1px solid var(--border)",
             display: "flex",
             flexDirection: "column",
-            boxShadow: "0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(59,130,246,0.06)",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(59,130,246,0.06)",
           }}
         >
           {/* Header */}
@@ -139,7 +140,7 @@ export default function ChatWidget() {
               alignItems: "center",
               justifyContent: "space-between",
               padding: "12px 16px",
-              borderBottom: "1px solid rgba(65,71,84,0.2)",
+              borderBottom: "1px solid var(--border-subtle)",
               flexShrink: 0,
             }}
           >
@@ -156,7 +157,7 @@ export default function ChatWidget() {
               />
               <span
                 className="font-label"
-                style={{ fontSize: "0.58rem", letterSpacing: "0.18em", color: "rgba(255,255,255,0.7)" }}
+                style={{ fontSize: "0.58rem", letterSpacing: "0.18em", color: "var(--text-secondary)" }}
               >
                 DASH
               </span>
@@ -170,15 +171,15 @@ export default function ChatWidget() {
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
-                    color: "rgba(139,145,160,0.4)",
+                    color: "var(--text-dim)",
                     fontSize: "0.6rem",
                     fontFamily: "inherit",
                     letterSpacing: "0.1em",
                     padding: "2px 6px",
                     textTransform: "uppercase",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(139,145,160,0.8)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(139,145,160,0.4)")}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-dim)")}
                 >
                   CLEAR
                 </button>
@@ -189,15 +190,15 @@ export default function ChatWidget() {
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
-                  color: "rgba(139,145,160,0.5)",
+                  color: "var(--text-dim)",
                   fontSize: "14px",
                   lineHeight: 1,
                   padding: "2px 4px",
                   display: "flex",
                   alignItems: "center",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(139,145,160,0.5)")}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-dim)")}
               >
                 ✕
               </button>
@@ -263,14 +264,14 @@ export default function ChatWidget() {
                     wordBreak: "break-word",
                     ...(msg.role === "user"
                       ? {
-                          background: "rgba(59,130,246,0.12)",
-                          border: "1px solid rgba(59,130,246,0.2)",
-                          color: "rgba(255,255,255,0.88)",
+                          background: "var(--bg-msg-user)",
+                          border: "1px solid var(--border-msg-user)",
+                          color: "var(--text-primary)",
                         }
                       : {
-                          background: "rgba(255,255,255,0.03)",
-                          border: "1px solid rgba(65,71,84,0.2)",
-                          color: "rgba(255,255,255,0.75)",
+                          background: "var(--bg-msg-assistant)",
+                          border: "1px solid var(--border-msg-assistant)",
+                          color: "var(--text-secondary)",
                         }),
                   }}
                 >
@@ -284,8 +285,8 @@ export default function ChatWidget() {
                 <div
                   style={{
                     padding: "8px 14px",
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(65,71,84,0.2)",
+                    background: "var(--bg-msg-assistant)",
+                    border: "1px solid var(--border-msg-assistant)",
                     display: "flex",
                     gap: "4px",
                     alignItems: "center",
@@ -315,7 +316,7 @@ export default function ChatWidget() {
           <div
             style={{
               padding: "12px 16px",
-              borderTop: "1px solid rgba(65,71,84,0.2)",
+              borderTop: "1px solid var(--border-subtle)",
               flexShrink: 0,
               display: "flex",
               gap: "8px",
@@ -332,11 +333,11 @@ export default function ChatWidget() {
               rows={1}
               style={{
                 flex: 1,
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(65,71,84,0.25)",
+                background: "var(--bg-input)",
+                border: "1px solid var(--border-subtle)",
                 borderRadius: 0,
-                color: "rgba(255,255,255,0.85)",
-                fontSize: "0.78rem",
+                color: "var(--text-primary)",
+                fontSize: "16px",
                 fontFamily: "Roboto, sans-serif",
                 fontWeight: 300,
                 padding: "8px 10px",
@@ -347,8 +348,8 @@ export default function ChatWidget() {
                 overflowY: "auto",
                 transition: "border-color 0.15s ease",
               }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(65,71,84,0.25)")}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border-subtle)")}
             />
             <button
               onClick={handleSend}
@@ -382,29 +383,24 @@ export default function ChatWidget() {
           width: "52px",
           height: "52px",
           borderRadius: "50%",
-          background: isOpen ? "rgba(59,130,246,0.15)" : "#3b82f6",
-          border: isOpen ? "1px solid rgba(59,130,246,0.4)" : "none",
+          background: "#3b82f6",
+          border: "none",
           cursor: "pointer",
-          display: "flex",
+          display: isOpen ? "none" : "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: isOpen
-            ? "none"
-            : "0 0 20px rgba(59,130,246,0.4), 0 4px 16px rgba(0,0,0,0.5)",
+          boxShadow: "0 0 20px rgba(59,130,246,0.4), 0 4px 16px rgba(0,0,0,0.5)",
           transition: "all 0.2s ease",
-          color: isOpen ? "rgba(59,130,246,0.7)" : "#000d1a",
+          color: "#000d1a",
         }}
         onMouseEnter={(e) => {
-          if (!isOpen) e.currentTarget.style.boxShadow = "0 0 28px rgba(59,130,246,0.6), 0 4px 20px rgba(0,0,0,0.5)";
+          e.currentTarget.style.boxShadow = "0 0 28px rgba(59,130,246,0.6), 0 4px 20px rgba(0,0,0,0.5)";
         }}
         onMouseLeave={(e) => {
-          if (!isOpen) e.currentTarget.style.boxShadow = "0 0 20px rgba(59,130,246,0.4), 0 4px 16px rgba(0,0,0,0.5)";
+          e.currentTarget.style.boxShadow = "0 0 20px rgba(59,130,246,0.4), 0 4px 16px rgba(0,0,0,0.5)";
         }}
       >
-        {isOpen
-          ? <span style={{ fontSize: "15px", lineHeight: 1 }}>✕</span>
-          : <RobotIcon size={24} color="#000d1a" />
-        }
+        <RobotIcon size={24} color="#000d1a" />
       </button>
     </div>
   );

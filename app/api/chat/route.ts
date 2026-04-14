@@ -17,8 +17,8 @@ export async function POST(req: Request) {
       ...messages,
     ];
 
-    // Tool-calling loop — max 8 iterations
-    for (let i = 0; i < 8; i++) {
+    // Tool-calling loop — max 20 iterations (allows projects with many steps + log)
+    for (let i = 0; i < 20; i++) {
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: history,

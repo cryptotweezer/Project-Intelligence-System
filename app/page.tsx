@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import ThemeToggle from "@/app/components/ThemeToggle";
 
 const TYPING_WORDS = ["SECURE SYSTEM ACCESS", "TWEEZER"];
 const TYPE_SPEED = 80;
@@ -68,7 +69,12 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-obsidian flex flex-col items-center justify-center relative overflow-hidden">
+    <main className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background: "var(--bg-base)" }}>
+      {/* Theme toggle */}
+      <div style={{ position: "absolute", top: "20px", right: "20px", zIndex: 10 }}>
+        <ThemeToggle />
+      </div>
+
       {/* Ambient background glow */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -97,8 +103,8 @@ export default function LoginPage() {
             <span style={{ opacity: 1, animation: "blink 1s step-end infinite" }}>▌</span>
           </div>
           <h1
-            className="font-display text-2xl text-white"
-            style={{ letterSpacing: "-0.02em" }}
+            className="font-display text-2xl"
+            style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
           >
             PROJECT INTEL
           </h1>
@@ -148,8 +154,7 @@ export default function LoginPage() {
         </form>
 
         {/* Footer */}
-        <div className="mt-16 text-center font-label text-outline opacity-30"
-          style={{ fontSize: "0.55rem", letterSpacing: "0.2em" }}>
+        <div className="mt-16 text-center font-label opacity-30" style={{ color: "var(--text-muted)", fontSize: "0.55rem", letterSpacing: "0.2em" }}>
           UNAUTHORIZED ACCESS PROHIBITED
         </div>
       </div>

@@ -17,12 +17,12 @@ async function recalculateCompletion(projectId: string): Promise<void> {
   await (supabase.from("projects") as any).update({ completion_pct: pct }).eq("id", projectId);
 }
 
-export async function deleteProject(id: string): Promise<void> {
+export async function deleteProject(id: string, redirectTo = "/dashboard/projects"): Promise<void> {
   const supabase = await createClient();
   await supabase.from("project_logs").delete().eq("project_id", id);
   await supabase.from("project_steps").delete().eq("project_id", id);
   await supabase.from("projects").delete().eq("id", id);
-  redirect("/dashboard/projects");
+  redirect(redirectTo);
 }
 
 export async function deleteLink(id: string, projectId: string): Promise<void> {
@@ -56,6 +56,32 @@ export async function updateStepStatus(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase.from("project_steps") as any).update({ status }).eq("id", stepId);
   await recalculateCompletion(projectId);
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/projects/${projectId}`);
+}
+
+export async function updateProjectStatus(projectId: string, status: string): Promise<void> {
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from("projects") as any).update({ status }).eq("id", projectId);
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/projects");
+  revalidatePath(`/dashboard/projects/${projectId}`);
+}
+
+export async function updateProjectAgent(projectId: string, agent: string): Promise<void> {
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from("projects") as any).update({ agent }).eq("id", projectId);
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/projects");
+  revalidatePath(`/dashboard/projects/${projectId}`);
+}
+
+export async function updateProjectPriority(projectId: string, priority: string): Promise<void> {
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from("projects") as any).update({ priority }).eq("id", projectId);
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/projects/${projectId}`);
 }
@@ -97,6 +123,29 @@ export async function moveStep(
   await (supabase.from("project_steps") as any).update({ step_number: a.step_number }).eq("id", b.id);
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/projects/${projectId}`);
+}
+
+export async function markProjectDone(projectId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: steps } = await supabase
+    .from("project_steps")
+    .select("status")
+    .eq("project_id", projectId);
+
+  // Server-side guard: only proceed if every step is done
+  if (!steps || steps.length === 0) return;
+  const allDone = steps.every((s: { status: string }) => s.status === "done");
+  if (!allDone) return;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from("projects") as any)
+    .update({ status: "done", completion_pct: 100 })
+    .eq("id", projectId);
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/completed");
+  revalidatePath(`/dashboard/projects/${projectId}`);
+  redirect("/dashboard/completed");
 }
 
 export async function createStep(

@@ -1,7 +1,7 @@
 // ── Database Types (matches Supabase schema) ──────────────────────────
 
-export type ProjectPriority = "Urgent" | "Normal" | "Someday";
-export type ProjectAgent = "Claude" | "Emma" | "Both" | "Dash";
+export type ProjectPriority = "Urgent" | "Scheduled" | "Someday" | (string & {});
+export type ProjectAgent = "Claude" | "Emma" | "Dash" | "All";
 export type ProjectStatus = "active" | "paused" | "done" | "archived";
 export type StepStatus = "pending" | "in_progress" | "done" | "error";
 
@@ -51,12 +51,25 @@ export interface ProjectLink {
   created_at: string;
 }
 
-export interface AgentLog {
-  id: string;
-  agent_name: string | null;
-  task_description: string | null;
-  model_used: string | null;
-  status: string | null;
+// ── Resume Project Types ───────────────────────────────────────────────
+
+export interface ContactLead {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string | null;
+  message: string;
   created_at: string | null;
-  progress_pct: number | null;
+}
+
+export interface ResumeUser {
+  id: number;
+  email: string;
+  name: string | null;
+  clerk_id: string;
+  role: string;
+  is_first_user: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
 }

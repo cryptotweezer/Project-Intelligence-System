@@ -85,7 +85,7 @@ export default function CreateStepForm({ projectId }: { projectId: string }) {
           style={{
             fontSize: "0.55rem",
             letterSpacing: "0.1em",
-            color: "rgba(139,145,160,0.4)",
+            color: "var(--text-dim)",
             background: "none",
             border: "none",
             cursor: "pointer",

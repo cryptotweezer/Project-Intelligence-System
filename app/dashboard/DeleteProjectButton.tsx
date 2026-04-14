@@ -3,12 +3,20 @@
 import { useTransition } from "react";
 import { deleteProject } from "@/app/actions/overview";
 
-export default function DeleteProjectButton({ projectId, projectName }: { projectId: string; projectName: string }) {
+export default function DeleteProjectButton({
+  projectId,
+  projectName,
+  redirectTo,
+}: {
+  projectId: string;
+  projectName: string;
+  redirectTo?: string;
+}) {
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
-    if (!window.confirm(`Delete project "${projectName}"? This will also remove all its steps and logs.`)) return;
-    startTransition(() => deleteProject(projectId));
+    if (!window.confirm(`Delete "${projectName}"? This will also remove all its steps and logs.`)) return;
+    startTransition(() => deleteProject(projectId, redirectTo));
   }
 
   return (
@@ -19,7 +27,8 @@ export default function DeleteProjectButton({ projectId, projectName }: { projec
       style={{
         fontSize: "0.55rem",
         letterSpacing: "0.1em",
-        color: isPending ? "rgba(255,178,190,0.3)" : "rgba(255,178,190,0.5)",
+        color: isPending ? "var(--ruby-red)" : "var(--ruby-red)",
+        opacity: isPending ? 0.35 : 0.65,
         cursor: isPending ? "not-allowed" : "pointer",
         background: "none",
         border: "none",

@@ -10,20 +10,23 @@ import StepStatusSelect from "@/app/dashboard/StepStatusSelect";
 import CreateStepForm from "@/app/dashboard/CreateStepForm";
 import EditableField from "@/app/dashboard/EditableField";
 import MoveStepButtons from "@/app/dashboard/MoveStepButtons";
+import MarkCompleteButton from "@/app/dashboard/MarkCompleteButton";
+import PrioritySelect from "@/app/dashboard/PrioritySelect";
+import StatusSelect from "@/app/dashboard/StatusSelect";
+import AgentSelect from "@/app/dashboard/AgentSelect";
 
 function PriorityBadge({ priority }: { priority: string }) {
   const cls =
     priority === "Urgent"
       ? "badge badge-urgent"
-      : priority === "Normal"
+      : priority === "Scheduled"
       ? "badge badge-normal"
-      : "badge badge-someday";
+      : priority === "Someday"
+      ? "badge badge-someday"
+      : "badge badge-custom";
   return <span className={cls}>{priority}</span>;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  return <span className={`badge badge-${status}`}>{status}</span>;
-}
 
 function StepDot({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -64,7 +67,7 @@ export default async function ProjectDetailPage({
       .from("project_logs")
       .select("*")
       .eq("project_id", params.id)
-      .order("session_date", { ascending: false }),
+      .order("created_at", { ascending: false }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.from("project_links") as any)
       .select("*")
@@ -98,15 +101,13 @@ export default async function ProjectDetailPage({
         <div className="font-label text-outline mb-1" style={{ fontSize: "0.5rem", letterSpacing: "0.2em" }}>
           {p.category}
         </div>
-        <h1 className="font-display text-3xl text-white mb-4" style={{ letterSpacing: "-0.02em" }}>
+        <h1 className="font-display text-3xl mb-4" style={{ letterSpacing: "-0.02em", color: "var(--text-primary)" }}>
           {p.name}
         </h1>
         <div className="flex items-center gap-3 flex-wrap">
-          <PriorityBadge priority={p.priority} />
-          <StatusBadge status={p.status} />
-          <span className="font-label" style={{ fontSize: "0.5rem", letterSpacing: "0.12em", color: "rgba(209,188,255,0.5)" }}>
-            ASSIGNED · {p.agent.toUpperCase()}
-          </span>
+          <PrioritySelect projectId={p.id} currentPriority={p.priority} />
+          <StatusSelect projectId={p.id} currentStatus={p.status} />
+          <AgentSelect projectId={p.id} currentAgent={p.agent} />
           {p.github_repo && (
             <a
               href={p.github_repo}
@@ -129,7 +130,7 @@ export default async function ProjectDetailPage({
           {/* Description — editable */}
           <div
             className="p-5"
-            style={{ background: "rgba(14,14,14,0.8)", border: "1px solid rgba(65,71,84,0.2)" }}
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
           >
             <div className="font-label text-outline mb-3" style={{ fontSize: "0.5rem", letterSpacing: "0.2em" }}>
               DESCRIPTION
@@ -145,7 +146,7 @@ export default async function ProjectDetailPage({
           {/* Expected Result — editable */}
           <div
             className="p-5"
-            style={{ background: "rgba(59,130,246,0.03)", border: "1px solid rgba(59,130,246,0.12)" }}
+            style={{ background: "var(--bg-expected)", border: "1px solid rgba(59,130,246,0.15)" }}
           >
             <div className="font-label text-electric-blue mb-3" style={{ fontSize: "0.5rem", letterSpacing: "0.2em" }}>
               EXPECTED RESULT
@@ -161,7 +162,7 @@ export default async function ProjectDetailPage({
           {/* Progress */}
           <div
             className="p-5"
-            style={{ background: "rgba(14,14,14,0.8)", border: "1px solid rgba(65,71,84,0.2)" }}
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
           >
             <div className="flex justify-between items-center mb-3">
               <div className="font-label text-outline" style={{ fontSize: "0.5rem", letterSpacing: "0.2em" }}>
@@ -171,7 +172,7 @@ export default async function ProjectDetailPage({
                 <span className="font-label" style={{ fontSize: "0.5rem", letterSpacing: "0.1em", color: "rgba(59,130,246,0.7)" }}>
                   {stepsDone} DONE
                 </span>
-                <span className="font-label" style={{ fontSize: "0.5rem", letterSpacing: "0.1em", color: "rgba(255,255,255,0.85)" }}>
+                <span className="font-label" style={{ fontSize: "0.5rem", letterSpacing: "0.1em", color: "var(--text-primary)" }}>
                   {stepsPending} PENDING
                 </span>
               </div>
@@ -183,12 +184,18 @@ export default async function ProjectDetailPage({
             <div className="progress-track">
               <div className="progress-fill" style={{ width: `${pct}%` }} />
             </div>
+
+            {pct === 100 && !["done", "archived"].includes(p.status) && (
+              <div style={{ marginTop: "16px" }}>
+                <MarkCompleteButton projectId={p.id} />
+              </div>
+            )}
           </div>
 
           {/* Steps */}
           <div
             className="p-5"
-            style={{ background: "rgba(14,14,14,0.8)", border: "1px solid rgba(65,71,84,0.2)" }}
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="font-label text-outline" style={{ fontSize: "0.5rem", letterSpacing: "0.2em" }}>
@@ -206,15 +213,15 @@ export default async function ProjectDetailPage({
                     key={step.id}
                     className="flex items-start gap-3 py-3 px-3"
                     style={{
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid rgba(65,71,84,0.15)",
+                      background: "var(--bg-input)",
+                      border: "1px solid var(--border-faint)",
                       borderLeft: step.status === "error"
                         ? "2px solid rgba(255,178,190,0.5)"
                         : step.status === "in_progress"
                         ? "2px solid rgba(209,188,255,0.4)"
                         : step.status === "done"
                         ? "2px solid rgba(59,130,246,0.3)"
-                        : "2px solid rgba(65,71,84,0.2)",
+                        : "2px solid var(--border-subtle)",
                     }}
                   >
                     {/* Reorder buttons */}
@@ -227,14 +234,14 @@ export default async function ProjectDetailPage({
 
                     <div className="flex items-center gap-2 mt-0.5 flex-shrink-0">
                       <StepDot status={step.status} />
-                      <span className="font-display" style={{ fontSize: "0.8rem", color: "rgba(139,145,160,0.4)" }}>
+                      <span className="font-display" style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
                         {step.step_number}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div
                         className="font-light text-sm"
-                        style={{ color: step.status === "done" ? "rgba(59,130,246,0.45)" : "rgba(255,255,255,0.85)" }}
+                        style={{ color: step.status === "done" ? "var(--accent-dim)" : "var(--text-primary)" }}
                       >
                         {step.title}
                       </div>
@@ -242,7 +249,7 @@ export default async function ProjectDetailPage({
                         <div className="text-outline font-light text-xs mt-0.5">{step.description}</div>
                       )}
                       {step.notes && (
-                        <div className="mt-1 text-xs font-light" style={{ color: "rgba(209,188,255,0.5)" }}>
+                        <div className="mt-1 text-xs font-light" style={{ color: "var(--label-purple)" }}>
                           {step.notes}
                         </div>
                       )}
@@ -262,7 +269,7 @@ export default async function ProjectDetailPage({
         <div className="space-y-4">
           <div
             className="p-5"
-            style={{ background: "rgba(14,14,14,0.8)", border: "1px solid rgba(65,71,84,0.2)" }}
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="font-label text-outline" style={{ fontSize: "0.5rem", letterSpacing: "0.2em" }}>
@@ -284,7 +291,7 @@ export default async function ProjectDetailPage({
                   <div
                     key={log.id}
                     className="pb-4"
-                    style={{ borderBottom: i < logList.length - 1 ? "1px solid rgba(65,71,84,0.15)" : "none" }}
+                    style={{ borderBottom: i < logList.length - 1 ? "1px solid var(--border-faint)" : "none" }}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div>
@@ -295,16 +302,16 @@ export default async function ProjectDetailPage({
                             year: "numeric",
                           })}
                         </div>
-                        <div className="font-label" style={{ fontSize: "0.45rem", letterSpacing: "0.1em", color: "rgba(209,188,255,0.4)" }}>
+                        <div className="font-label" style={{ fontSize: "0.45rem", letterSpacing: "0.1em", color: "var(--label-agent)" }}>
                           {log.agent}
                         </div>
                       </div>
                       <DeleteLogButton logId={log.id} projectId={p.id} />
                     </div>
-                    <p className="text-white font-light text-xs leading-relaxed mb-2">{log.summary}</p>
+                    <p className="font-light text-xs leading-relaxed mb-2" style={{ color: "var(--text-primary)" }}>{log.summary}</p>
                     {log.problems && (
                       <div className="mb-1">
-                        <span className="font-label" style={{ fontSize: "0.45rem", letterSpacing: "0.1em", color: "rgba(255,178,190,0.6)" }}>
+                        <span className="font-label" style={{ fontSize: "0.45rem", letterSpacing: "0.1em", color: "var(--label-problems)" }}>
                           PROBLEMS:{" "}
                         </span>
                         <span className="text-outline font-light text-xs">{log.problems}</span>
@@ -312,7 +319,7 @@ export default async function ProjectDetailPage({
                     )}
                     {log.solutions && (
                       <div>
-                        <span className="font-label" style={{ fontSize: "0.45rem", letterSpacing: "0.1em", color: "rgba(59,130,246,0.6)" }}>
+                        <span className="font-label" style={{ fontSize: "0.45rem", letterSpacing: "0.1em", color: "var(--label-solutions)" }}>
                           SOLUTIONS:{" "}
                         </span>
                         <span className="text-outline font-light text-xs">{log.solutions}</span>
@@ -328,7 +335,7 @@ export default async function ProjectDetailPage({
           {linkList.length > 0 && (
             <div
               className="p-5"
-              style={{ background: "rgba(14,14,14,0.8)", border: "1px solid rgba(65,71,84,0.2)" }}
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
             >
               <div className="font-label text-outline mb-4" style={{ fontSize: "0.5rem", letterSpacing: "0.2em" }}>
                 USEFUL LINKS
@@ -355,7 +362,7 @@ export default async function ProjectDetailPage({
           {/* Danger zone */}
           <div
             className="p-5"
-            style={{ background: "rgba(14,14,14,0.8)", border: "1px solid rgba(255,178,190,0.1)" }}
+            style={{ background: "var(--bg-card)", border: "1px solid rgba(255,178,190,0.15)" }}
           >
             <div className="font-label text-ruby-red mb-4" style={{ fontSize: "0.5rem", letterSpacing: "0.2em" }}>
               DANGER ZONE

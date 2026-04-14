@@ -46,11 +46,11 @@ export default function EditableField({ projectId, field, value, placeholder }: 
       {!editing && (
         <div>
           {value ? (
-            <p className="text-white font-light text-sm leading-relaxed mb-3" style={{ whiteSpace: "pre-wrap" }}>
+            <p className="font-light text-sm leading-relaxed mb-3" style={{ whiteSpace: "pre-wrap", color: "var(--text-primary)" }}>
               {value}
             </p>
           ) : (
-            <p className="font-light text-sm mb-3" style={{ color: "rgba(139,145,160,0.35)", fontStyle: "italic" }}>
+            <p className="font-light text-sm mb-3" style={{ color: "var(--text-dim)", fontStyle: "italic" }}>
               {placeholder}
             </p>
           )}

@@ -18,13 +18,13 @@ export default async function CompletedPage() {
   const sorted = (projects ?? []) as ProjectWithRelations[];
 
   return (
-    <div className="p-10 animate-fade-in">
+    <div className="p-4 sm:p-6 md:p-10 animate-fade-in">
       <div className="mb-10">
         <div className="font-label text-outline mb-2" style={{ fontSize: "0.6rem", letterSpacing: "0.25em" }}>
-          TASK HISTORY
+          COMPLETED TASKS
         </div>
-        <h1 className="font-display text-3xl text-white" style={{ letterSpacing: "-0.02em" }}>
-          Task Completed
+        <h1 className="font-display text-3xl" style={{ letterSpacing: "-0.02em", color: "var(--text-primary)" }}>
+          Completed Tasks
         </h1>
         <div className="mt-3" style={{ width: "60px", height: "1px", background: "linear-gradient(90deg, rgba(59,130,246,0.3), transparent)" }} />
         {sorted.length > 0 && (
@@ -41,9 +41,9 @@ export default async function CompletedPage() {
       )}
 
       {sorted.length === 0 ? (
-        <div className="p-12 text-center" style={{ border: "1px solid rgba(65,71,84,0.2)" }}>
+        <div className="p-12 text-center" style={{ border: "1px solid var(--border-subtle)" }}>
           <div className="font-label text-outline" style={{ fontSize: "0.65rem", letterSpacing: "0.2em" }}>
-            NO COMPLETED TASKS
+            NO COMPLETED TASKS YET
           </div>
           <p className="text-outline font-light text-sm mt-2">
             Tasks marked as done will appear here.

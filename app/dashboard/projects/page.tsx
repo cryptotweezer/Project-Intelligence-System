@@ -15,15 +15,10 @@ export default async function ProjectsPage() {
     .in("status", ["active", "paused"])
     .order("created_at", { ascending: true });
 
-  const priorityOrder: Record<string, number> = { Urgent: 0, Normal: 1, Someday: 2 };
-  const sorted = ((projects ?? []) as ProjectWithRelations[]).sort(
-    (a, b) =>
-      (priorityOrder[a.priority] ?? 3) - (priorityOrder[b.priority] ?? 3) ||
-      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  );
+  const allProjects = (projects ?? []) as ProjectWithRelations[];
 
   return (
-    <div className="p-10 animate-fade-in">
+    <div className="p-4 sm:p-6 md:p-10 animate-fade-in">
       <div className="mb-10">
         <div className="font-label text-outline mb-2" style={{ fontSize: "0.6rem", letterSpacing: "0.25em" }}>
           ACTIVE
@@ -40,7 +35,7 @@ export default async function ProjectsPage() {
         </div>
       )}
 
-      {sorted.length === 0 ? (
+      {allProjects.length === 0 ? (
         <div className="p-12 text-center" style={{ border: "1px solid rgba(65,71,84,0.2)" }}>
           <div className="font-label text-outline" style={{ fontSize: "0.65rem", letterSpacing: "0.2em" }}>
             NO PROJECTS FOUND
@@ -48,7 +43,7 @@ export default async function ProjectsPage() {
           <p className="text-outline font-light text-sm mt-2">Initialize your first project to begin.</p>
         </div>
       ) : (
-        <ProjectsList projects={sorted} />
+        <ProjectsList projects={allProjects} />
       )}
     </div>
   );

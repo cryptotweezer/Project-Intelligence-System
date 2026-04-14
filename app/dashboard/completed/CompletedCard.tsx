@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Project, ProjectStep, ProjectLog } from "@/lib/types";
+import DeleteProjectButton from "@/app/dashboard/DeleteProjectButton";
 
 type Props = {
   project: Project & { project_steps: ProjectStep[]; project_logs: ProjectLog[] };
@@ -13,7 +14,7 @@ type Props = {
 const tinyBadge: React.CSSProperties = { fontSize: "0.45rem", padding: "0.1rem 0.35rem", letterSpacing: "0.08em" };
 
 function PriorityBadge({ priority }: { priority: string }) {
-  const cls = priority === "Urgent" ? "badge badge-urgent" : priority === "Normal" ? "badge badge-normal" : "badge badge-someday";
+  const cls = priority === "Urgent" ? "badge badge-urgent" : priority === "Scheduled" ? "badge badge-normal" : priority === "Someday" ? "badge badge-someday" : "badge badge-custom";
   return <span className={cls} style={tinyBadge}>{priority}</span>;
 }
 
@@ -31,7 +32,7 @@ function StepDot({ status }: { status: string }) {
 export default function CompletedCard({ project, expanded, dimmed, onToggle }: Props) {
   const steps = (project.project_steps ?? []).sort((a, b) => a.step_number - b.step_number);
   const logs = (project.project_logs ?? []).sort(
-    (a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime()
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
   const lastLog = logs[0] ?? null;
   const stepsDone = steps.filter((s) => s.status === "done").length;
@@ -47,8 +48,8 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
   return (
     <div
       style={{
-        background: "rgba(14,14,14,0.8)",
-        border: "1px solid rgba(65,71,84,0.2)",
+        background: "var(--bg-card)",
+        border: "1px solid var(--border-subtle)",
         borderLeft: "2px solid rgba(59,130,246,0.2)",
         opacity: dimmed ? 0.35 : 1,
         transition: "opacity 0.2s ease",
@@ -60,7 +61,7 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
         className="w-full px-5 py-4 group"
         style={{ cursor: "pointer", userSelect: "text" }}
       >
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
           <span className="font-label text-outline" style={{ fontSize: "0.48rem", letterSpacing: "0.15em" }}>
             {project.category}
           </span>
@@ -70,14 +71,21 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
 
         <div className="flex items-center justify-between gap-3">
           <h2
-            className="font-display text-white"
-            style={{ fontSize: "0.95rem", letterSpacing: "-0.01em", color: "rgba(59,130,246,0.7)" }}
+            className="font-display"
+            style={{ fontSize: "0.95rem", letterSpacing: "-0.01em", color: "var(--accent-dim)" }}
           >
             {project.name}
           </h2>
-          <span className="font-label text-outline flex-shrink-0" style={{ fontSize: "0.5rem" }}>
-            {expanded ? "▲" : "▼"}
-          </span>
+          <div className="flex items-center gap-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            <DeleteProjectButton
+              projectId={project.id}
+              projectName={project.name}
+              redirectTo="/dashboard/completed"
+            />
+            <span className="font-label text-outline" style={{ fontSize: "0.5rem" }}>
+              {expanded ? "▲" : "▼"}
+            </span>
+          </div>
         </div>
 
         {project.description && (
@@ -94,13 +102,13 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
-          <span className="font-label" style={{ fontSize: "0.45rem", letterSpacing: "0.12em", color: "rgba(209,188,255,0.4)" }}>
+          <span className="font-label" style={{ fontSize: "0.45rem", letterSpacing: "0.12em", color: "var(--text-primary)" }}>
             ASSIGNED · {project.agent.toUpperCase()}
           </span>
           <span className="font-label" style={{ fontSize: "0.48rem", letterSpacing: "0.1em", color: "#3b82f6" }}>
             DONE {stepsDone}
           </span>
-          <span className="font-label" style={{ fontSize: "0.48rem", letterSpacing: "0.1em", color: "rgba(255,255,255,0.9)" }}>
+          <span className="font-label" style={{ fontSize: "0.48rem", letterSpacing: "0.1em", color: "var(--text-primary)" }}>
             PENDING {stepsPending}
           </span>
           {lastLog && (
@@ -113,7 +121,7 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
 
       {/* Expanded body — read-only */}
       {expanded && (
-        <div style={{ borderTop: "1px solid rgba(65,71,84,0.15)", userSelect: "text" }}>
+        <div style={{ borderTop: "1px solid var(--border-faint)", userSelect: "text" }}>
           <div className="px-5 py-4">
 
             {project.description && project.description.includes("\n") && (
@@ -123,7 +131,7 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
             )}
 
             {project.expected_result && (
-              <div className="mb-4 p-3" style={{ background: "rgba(59,130,246,0.04)", borderLeft: "2px solid rgba(59,130,246,0.2)" }}>
+              <div className="mb-4 p-3" style={{ background: "var(--bg-expected)", borderLeft: "2px solid rgba(59,130,246,0.2)" }}>
                 <div className="font-label text-outline mb-1" style={{ fontSize: "0.48rem", letterSpacing: "0.15em" }}>
                   EXPECTED RESULT
                 </div>
@@ -140,7 +148,7 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
                       <StepDot status={step.status} />
                       <span
                         className="font-light text-xs truncate"
-                        style={{ color: step.status === "done" ? "rgba(59,130,246,0.4)" : "rgba(255,255,255,0.6)" }}
+                        style={{ color: step.status === "done" ? "var(--accent-dim)" : "var(--text-secondary)" }}
                       >
                         {step.step_number}. {step.title}
                       </span>
@@ -152,7 +160,7 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
 
             {/* All logs — scrollable */}
             {logs.length > 0 && (
-              <div className="pt-3" style={{ borderTop: "1px solid rgba(65,71,84,0.15)" }}>
+              <div className="pt-3" style={{ borderTop: "1px solid var(--border-faint)" }}>
                 <div className="font-label text-outline mb-3" style={{ fontSize: "0.48rem", letterSpacing: "0.15em" }}>
                   SESSION LOGS · {logs.length}
                 </div>
@@ -161,7 +169,7 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
                     <div
                       key={log.id}
                       className="pb-3"
-                      style={{ borderBottom: i < logs.length - 1 ? "1px solid rgba(65,71,84,0.12)" : "none" }}
+                      style={{ borderBottom: i < logs.length - 1 ? "1px solid var(--border-faint)" : "none" }}
                     >
                       <div className="font-label text-outline mb-1" style={{ fontSize: "0.45rem", letterSpacing: "0.12em" }}>
                         {new Date(log.session_date).toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" })}
@@ -170,13 +178,13 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
                       <p className="text-outline font-light text-xs leading-relaxed">{log.summary}</p>
                       {log.problems && (
                         <div className="mt-1">
-                          <span className="font-label" style={{ fontSize: "0.43rem", color: "rgba(255,178,190,0.5)" }}>PROBLEMS: </span>
+                          <span className="font-label" style={{ fontSize: "0.43rem", color: "var(--label-problems)" }}>PROBLEMS: </span>
                           <span className="text-outline font-light text-xs">{log.problems}</span>
                         </div>
                       )}
                       {log.solutions && (
                         <div className="mt-0.5">
-                          <span className="font-label" style={{ fontSize: "0.43rem", color: "rgba(59,130,246,0.5)" }}>SOLUTIONS: </span>
+                          <span className="font-label" style={{ fontSize: "0.43rem", color: "var(--label-solutions)" }}>SOLUTIONS: </span>
                           <span className="text-outline font-light text-xs">{log.solutions}</span>
                         </div>
                       )}
@@ -187,7 +195,7 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
             )}
 
             {project.github_repo && (
-              <div className="flex justify-end mt-3 pt-3" style={{ borderTop: "1px solid rgba(65,71,84,0.15)" }}>
+              <div className="flex justify-end mt-3 pt-3" style={{ borderTop: "1px solid var(--border-faint)" }}>
                 <a
                   href={project.github_repo}
                   target="_blank"
