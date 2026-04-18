@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { Project, ProjectStep, ProjectLog } from "@/lib/types";
 import DeleteProjectButton from "@/app/dashboard/DeleteProjectButton";
+import { reactivateProject } from "@/app/actions/overview";
 
 type Props = {
   project: Project & { project_steps: ProjectStep[]; project_logs: ProjectLog[] };
@@ -30,6 +31,7 @@ function StepDot({ status }: { status: string }) {
 }
 
 export default function CompletedCard({ project, expanded, dimmed, onToggle }: Props) {
+  const [isPending, startTransition] = useTransition();
   const steps = (project.project_steps ?? []).sort((a, b) => a.step_number - b.step_number);
   const logs = (project.project_logs ?? []).sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -38,6 +40,10 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
   const stepsDone = steps.filter((s) => s.status === "done").length;
   const stepsPending = steps.filter((s) => s.status !== "done").length;
   const pct = project.completion_pct ?? 0;
+
+  function handleReactivate() {
+    startTransition(() => reactivateProject(project.id));
+  }
 
   function handleToggle() {
     const selection = window.getSelection();
@@ -77,6 +83,25 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
             {project.name}
           </h2>
           <div className="flex items-center gap-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={handleReactivate}
+              disabled={isPending}
+              className="font-label"
+              title="Move back to active projects"
+              style={{
+                fontSize: "0.48rem",
+                letterSpacing: "0.1em",
+                color: isPending ? "var(--text-dim)" : "#22d3ee",
+                background: "transparent",
+                border: "none",
+                cursor: isPending ? "not-allowed" : "pointer",
+                padding: "2px 0",
+                opacity: isPending ? 0.5 : 1,
+                transition: "opacity 0.15s",
+              }}
+            >
+              {isPending ? "..." : "↩ REACTIVATE"}
+            </button>
             <DeleteProjectButton
               projectId={project.id}
               projectName={project.name}

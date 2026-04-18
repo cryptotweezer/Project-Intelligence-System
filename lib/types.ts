@@ -1,12 +1,14 @@
 // ── Database Types (matches Supabase schema) ──────────────────────────
 
 export type ProjectPriority = "Urgent" | "Scheduled" | "Someday" | (string & {});
-export type ProjectAgent = "Claude" | "Emma" | "Dash" | "All";
+export type ProjectAgent = string;
 export type ProjectStatus = "active" | "paused" | "done" | "archived";
 export type StepStatus = "pending" | "in_progress" | "done" | "error";
 
 export interface Project {
   id: string;
+  slug: string;
+  user_id: string;
   name: string;
   description: string | null;
   expected_result: string | null;
@@ -22,6 +24,7 @@ export interface Project {
 export interface ProjectStep {
   id: string;
   project_id: string;
+  user_id: string;
   step_number: number;
   title: string;
   description: string | null;
@@ -33,6 +36,7 @@ export interface ProjectStep {
 export interface ProjectLog {
   id: string;
   project_id: string;
+  user_id: string;
   step_id: string | null;
   agent: string;
   session_date: string;
@@ -46,8 +50,16 @@ export interface ProjectLog {
 export interface ProjectLink {
   id: string;
   project_id: string;
+  user_id: string;
   title: string;
   url: string;
+  created_at: string;
+}
+
+export interface GuestLimit {
+  user_id: string;
+  dash_messages_used: number;
+  has_seen_tour: boolean;
   created_at: string;
 }
 

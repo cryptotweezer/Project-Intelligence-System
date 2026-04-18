@@ -1,19 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { Project, ProjectStep, ProjectLog, ProjectLink } from "@/lib/types";
 import DeleteProjectButton from "@/app/dashboard/DeleteProjectButton";
 import DeleteLogButton from "@/app/dashboard/DeleteLogButton";
 import DeleteLinkButton from "@/app/dashboard/DeleteLinkButton";
-import DeleteStepButton from "@/app/dashboard/DeleteStepButton";
-import StepStatusSelect from "@/app/dashboard/StepStatusSelect";
 import CreateStepForm from "@/app/dashboard/CreateStepForm";
 import EditableField from "@/app/dashboard/EditableField";
-import MoveStepButtons from "@/app/dashboard/MoveStepButtons";
 import MarkCompleteButton from "@/app/dashboard/MarkCompleteButton";
 import PrioritySelect from "@/app/dashboard/PrioritySelect";
 import StatusSelect from "@/app/dashboard/StatusSelect";
 import AgentSelect from "@/app/dashboard/AgentSelect";
+import StepsList from "@/app/dashboard/StepsList";
 
 function PriorityBadge({ priority }: { priority: string }) {
   const cls =
@@ -28,56 +27,46 @@ function PriorityBadge({ priority }: { priority: string }) {
 }
 
 
-function StepDot({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    pending: "#8b91a0",
-    in_progress: "#d1bcff",
-    done: "#3b82f6",
-    error: "#ffb2be",
-  };
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        width: "7px",
-        height: "7px",
-        borderRadius: "50%",
-        background: colors[status] ?? "#8b91a0",
-        flexShrink: 0,
-      }}
-    />
-  );
-}
-
 export default async function ProjectDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: { slug: string };
 }) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
   const supabase = await createClient();
 
-  const [{ data: project }, { data: steps }, { data: logs }, { data: links }] = await Promise.all([
-    supabase.from("projects").select("*").eq("id", params.id).single(),
-    supabase
-      .from("project_steps")
-      .select("*")
-      .eq("project_id", params.id)
-      .order("step_number"),
-    supabase
-      .from("project_logs")
-      .select("*")
-      .eq("project_id", params.id)
-      .order("created_at", { ascending: false }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase.from("project_links") as any)
-      .select("*")
-      .eq("project_id", params.id)
-      .order("created_at"),
-  ]);
+  // Fetch project by slug, scoped to current user
+  const { data: project } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("slug", params.slug)
+    .eq("user_id", user.id)
+    .single();
 
   if (!project) notFound();
 
   const p = project as Project;
+
+  const [{ data: steps }, { data: logs }, { data: links }] = await Promise.all([
+    supabase
+      .from("project_steps")
+      .select("*")
+      .eq("project_id", p.id)
+      .order("step_number"),
+    supabase
+      .from("project_logs")
+      .select("*")
+      .eq("project_id", p.id)
+      .order("created_at", { ascending: false }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("project_links") as any)
+      .select("*")
+      .eq("project_id", p.id)
+      .order("created_at"),
+  ]);
+
   const stepList = (steps ?? []) as ProjectStep[];
   const logList = (logs ?? []) as ProjectLog[];
   const linkList = (links ?? []) as ProjectLink[];
@@ -204,68 +193,11 @@ export default async function ProjectDetailPage({
               <CreateStepForm projectId={p.id} />
             </div>
 
-            {stepList.length === 0 ? (
-              <p className="text-outline font-light text-sm">No steps defined yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {stepList.map((step, idx) => (
-                  <div
-                    key={step.id}
-                    className="flex items-start gap-3 py-3 px-3"
-                    style={{
-                      background: "var(--bg-input)",
-                      border: "1px solid var(--border-faint)",
-                      borderLeft: step.status === "error"
-                        ? "2px solid rgba(255,178,190,0.5)"
-                        : step.status === "in_progress"
-                        ? "2px solid rgba(209,188,255,0.4)"
-                        : step.status === "done"
-                        ? "2px solid rgba(59,130,246,0.3)"
-                        : "2px solid var(--border-subtle)",
-                    }}
-                  >
-                    {/* Reorder buttons */}
-                    <MoveStepButtons
-                      stepId={step.id}
-                      projectId={p.id}
-                      isFirst={idx === 0}
-                      isLast={idx === stepList.length - 1}
-                    />
-
-                    <div className="flex items-center gap-2 mt-0.5 flex-shrink-0">
-                      <StepDot status={step.status} />
-                      <span className="font-display" style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
-                        {step.step_number}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div
-                        className="font-light text-sm"
-                        style={{ color: step.status === "done" ? "var(--accent-dim)" : "var(--text-primary)" }}
-                      >
-                        {step.title}
-                      </div>
-                      {step.description && (
-                        <div className="text-outline font-light text-xs mt-0.5">{step.description}</div>
-                      )}
-                      {step.notes && (
-                        <div className="mt-1 text-xs font-light" style={{ color: "var(--label-purple)" }}>
-                          {step.notes}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <StepStatusSelect stepId={step.id} projectId={p.id} currentStatus={step.status} />
-                      <DeleteStepButton stepId={step.id} projectId={p.id} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <StepsList steps={stepList} projectId={p.id} />
           </div>
         </div>
 
-        {/* Right column: logs */}
+        {/* Right column: logs + links + danger */}
         <div className="space-y-4">
           <div
             className="p-5"
@@ -331,7 +263,6 @@ export default async function ProjectDetailPage({
             )}
           </div>
 
-          {/* Useful Links */}
           {linkList.length > 0 && (
             <div
               className="p-5"
@@ -359,7 +290,6 @@ export default async function ProjectDetailPage({
             </div>
           )}
 
-          {/* Danger zone */}
           <div
             className="p-5"
             style={{ background: "var(--bg-card)", border: "1px solid rgba(255,178,190,0.15)" }}

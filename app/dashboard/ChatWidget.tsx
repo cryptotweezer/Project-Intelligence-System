@@ -24,7 +24,7 @@ function RobotIcon({ size = 22, color = "currentColor" }: { size?: number; color
   );
 }
 
-export default function ChatWidget() {
+export default function ChatWidget({ userId, isOwner }: { userId: string; isOwner: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => {
     if (typeof window === "undefined") return [];
@@ -40,8 +40,10 @@ export default function ChatWidget() {
   const [isOnline, setIsOnline] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   // Persist messages
   useEffect(() => {
@@ -60,6 +62,14 @@ export default function ChatWidget() {
     }
   }, [isOpen]);
 
+  // Auto-resize textarea as content grows
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [input]);
+
   // Close on click outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -70,6 +80,18 @@ export default function ChatWidget() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
+
+  // Track scroll position in messages container
+  function handleMessagesScroll() {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollBtn(distanceFromBottom > 80);
+  }
+
+  function scrollToBottom() {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || loading) return;
@@ -97,6 +119,7 @@ export default function ChatWidget() {
       ]);
     } finally {
       setLoading(false);
+      setTimeout(() => inputRef.current?.focus(), 0);
     }
   }, [input, loading, messages]);
 
@@ -206,7 +229,10 @@ export default function ChatWidget() {
           </div>
 
           {/* Messages */}
+          <div style={{ position: "relative", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
           <div
+            ref={messagesContainerRef}
+            onScroll={handleMessagesScroll}
             style={{
               flex: 1,
               overflowY: "auto",
@@ -224,23 +250,44 @@ export default function ChatWidget() {
                   flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "10px",
+                  gap: "16px",
+                  padding: "0 8px",
                 }}
               >
-                <div style={{ opacity: 0.4, color: statusColor, transition: "color 0.3s ease" }}>
-                  <RobotIcon size={32} color={statusColor} />
+                <div style={{ opacity: 0.5, color: statusColor, transition: "color 0.3s ease" }}>
+                  <RobotIcon size={36} color={statusColor} />
+                </div>
+                <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <p style={{
+                    margin: 0,
+                    fontSize: "0.88rem",
+                    fontWeight: 400,
+                    color: "var(--text-primary)",
+                    lineHeight: 1.4,
+                  }}>
+                    Hi, I&apos;m Dash
+                  </p>
+                  <p style={{
+                    margin: 0,
+                    fontSize: "0.72rem",
+                    fontWeight: 300,
+                    color: "var(--text-secondary)",
+                    lineHeight: 1.5,
+                  }}>
+                    Your project management assistant. Tell me what you&apos;re building and I&apos;ll take care of the rest.
+                  </p>
                 </div>
                 <span
                   className="font-label"
                   style={{
-                    fontSize: "0.52rem",
+                    fontSize: "0.46rem",
                     letterSpacing: "0.2em",
                     color: statusColor,
-                    opacity: 0.6,
+                    opacity: 0.5,
                     transition: "color 0.3s ease",
                   }}
                 >
-                  {isOnline ? "DASH ONLINE" : "DASH OFFLINE"}
+                  {isOnline ? "ONLINE" : "OFFLINE"}
                 </span>
               </div>
             )}
@@ -257,6 +304,7 @@ export default function ChatWidget() {
                   style={{
                     maxWidth: "88%",
                     padding: "8px 12px",
+                    borderRadius: "8px",
                     fontSize: "0.78rem",
                     fontWeight: 300,
                     lineHeight: "1.5",
@@ -285,6 +333,7 @@ export default function ChatWidget() {
                 <div
                   style={{
                     padding: "8px 14px",
+                    borderRadius: "8px",
                     background: "var(--bg-msg-assistant)",
                     border: "1px solid var(--border-msg-assistant)",
                     display: "flex",
@@ -310,6 +359,35 @@ export default function ChatWidget() {
             )}
 
             <div ref={messagesEndRef} />
+          </div>
+
+          {/* Scroll-to-bottom button */}
+          {showScrollBtn && (
+            <button
+              onClick={scrollToBottom}
+              title="Jump to latest"
+              style={{
+                position: "absolute",
+                bottom: "8px",
+                right: "12px",
+                width: "28px",
+                height: "28px",
+                borderRadius: "50%",
+                background: "rgba(59,130,246,0.85)",
+                border: "none",
+                cursor: "pointer",
+                color: "#000d1a",
+                fontSize: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                zIndex: 10,
+              }}
+            >
+              ▼
+            </button>
+          )}
           </div>
 
           {/* Input */}
@@ -344,9 +422,10 @@ export default function ChatWidget() {
                 outline: "none",
                 resize: "none",
                 lineHeight: "1.4",
-                maxHeight: "96px",
+                maxHeight: "180px",
                 overflowY: "auto",
                 transition: "border-color 0.15s ease",
+                height: "auto",
               }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border-subtle)")}
@@ -377,6 +456,7 @@ export default function ChatWidget() {
 
       {/* ── Toggle Button ─────────────────────────────────────── */}
       <button
+        data-tour="dash-fab"
         onClick={() => setIsOpen((v) => !v)}
         title={isOpen ? "Close Dash" : "Open Dash"}
         style={{

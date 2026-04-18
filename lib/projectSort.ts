@@ -9,23 +9,55 @@ const PRIORITY_RANK: Record<string, number> = { Urgent: 0, Scheduled: 1, Someday
 
 type Sortable = { id: string; priority: string; created_at: string };
 
+// Parse Spanish/English date-like priority strings into a timestamp.
+// Handles "15 de junio", "20 de abril", "April 20", "2025-06-15", etc.
+// Returns null if the string doesn't look like a date.
+const SPANISH_MONTHS: Record<string, number> = {
+  enero: 0, febrero: 1, marzo: 2, abril: 3, mayo: 4, junio: 5,
+  julio: 6, agosto: 7, septiembre: 8, octubre: 9, noviembre: 10, diciembre: 11,
+};
+
+// Compiled once — reused across all sort comparisons
+const SPANISH_DATE_RE = /^(\d{1,2})\s+de\s+([a-záéíóúü]+)(?:\s+de\s+(\d{4}))?$/;
+
+function parsePriorityDate(priority: string): number | null {
+  const s = priority.trim().toLowerCase();
+
+  const m = SPANISH_DATE_RE.exec(s);
+  if (m) {
+    const day   = parseInt(m[1], 10);
+    const month = SPANISH_MONTHS[m[2]];
+    const year  = m[3] ? parseInt(m[3], 10) : new Date().getFullYear();
+    if (month !== undefined) return new Date(year, month, day).getTime();
+  }
+
+  const parsed = Date.parse(priority);
+  return isNaN(parsed) ? null : parsed;
+}
+
 export function sortByUrgency<T extends Sortable>(list: T[]): T[] {
   return [...list].sort((a, b) => {
     const ra = PRIORITY_RANK[a.priority] ?? 3;
     const rb = PRIORITY_RANK[b.priority] ?? 3;
     const rd = ra - rb;
     if (rd !== 0) return rd;
+
     if (ra === 3 && rb === 3) {
-      const alpha = a.priority.localeCompare(b.priority);
-      if (alpha !== 0) return alpha;
+      const da = parsePriorityDate(a.priority);
+      const db = parsePriorityDate(b.priority);
+      if (da !== null && db !== null) return da - db;
+      if (da !== null) return -1;
+      if (db !== null) return 1;
+      return a.priority.localeCompare(b.priority);
     }
+
     return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
   });
 }
 
 export function sortByDate<T extends Sortable>(list: T[]): T[] {
   return [...list].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 }
 

@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import type { Project, ProjectStep, ProjectLog } from "@/lib/types";
 import ProjectsList from "./ProjectsList";
 
@@ -8,12 +10,16 @@ type ProjectWithRelations = Project & {
 };
 
 export default async function ProjectsPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
   const supabase = await createClient();
   const { data: projects, error } = await supabase
     .from("projects")
     .select("*, project_steps(*), project_logs(*)")
+    .eq("user_id", user.id)
     .in("status", ["active", "paused"])
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
 
   const allProjects = (projects ?? []) as ProjectWithRelations[];
 

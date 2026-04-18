@@ -133,6 +133,26 @@ html.light .badge-custom   { color: #0891b2; border-color: rgba(8,145,178,0.4); 
 html.light .badge-paused   { color: #4a5580; border-color: rgba(74,85,128,0.3); }
 html.light .badge-archived { color: #6b7299; border-color: rgba(74,85,128,0.25); }
 
+/* ── Input & button contrast for light mode ─────────────────────── */
+html.light .obsidian-input {
+  border-bottom-color: rgba(50,65,120,0.35);
+}
+html.light .obsidian-input:focus {
+  border-bottom-color: #1d5fd4;
+  box-shadow: 0 1px 0 0 rgba(29,95,212,0.35);
+}
+html.light .obsidian-input::placeholder {
+  color: rgba(50,65,120,0.4);
+}
+html.light .btn-primary {
+  background: #1d5fd4;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(29,95,212,0.25);
+}
+html.light .btn-primary:hover {
+  box-shadow: 0 0 16px rgba(29,95,212,0.35), 0 2px 8px rgba(29,95,212,0.2);
+}
+
 /* ── Typography Classes ─────────────────────────────────────────── */
 .font-display {
   font-family: 'Space Grotesk', sans-serif;
@@ -316,7 +336,7 @@ html.light .badge-archived { color: #6b7299; border-color: rgba(74,85,128,0.25);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   border: none;
-  border-radius: 0;
+  border-radius: 4px;
   padding: 0.75rem 2rem;
   cursor: pointer;
   transition: box-shadow 0.2s ease, transform 0.1s ease;
@@ -356,6 +376,15 @@ html.light .badge-archived { color: #6b7299; border-color: rgba(74,85,128,0.25);
   50%       { opacity: 0.6; box-shadow: 0 0 20px rgba(255, 178, 190, 0.9); }
 }
 
+@keyframes tour-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.4), 0 4px 16px rgba(0,0,0,0.5); }
+  50%       { box-shadow: 0 0 44px rgba(59,130,246,1), 0 4px 24px rgba(0,0,0,0.5); }
+}
+
+.tour-pulse {
+  animation: tour-pulse 1.4s ease-in-out infinite !important;
+}
+
 /* ── Priority Badges ────────────────────────────────────────────── */
 .badge {
   display: inline-flex;
@@ -388,3 +417,87 @@ html.light .badge-archived { color: #6b7299; border-color: rgba(74,85,128,0.25);
 .badge-archived { border: 1px solid var(--border-subtle); color: var(--text-dim); background: transparent; }
 .badge-someday  { border: 1px solid rgba(245,158,11,0.4); color: #f59e0b; background: rgba(245,158,11,0.05); }
 .badge-custom   { border: 1px solid rgba(34,211,238,0.4); color: #22d3ee; background: rgba(34,211,238,0.05); }
+
+/* ── Homepage hover effects ─────────────────────────────────────── */
+
+/* Outline buttons — border brightens, background tints */
+.hp-btn-outline {
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.hp-btn-outline:hover {
+  border-color: var(--accent) !important;
+  background: rgba(59,130,246,0.06) !important;
+}
+
+/* Feature cards — border top brightens, background lightens slightly */
+.hp-feature-card {
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.hp-feature-card:hover {
+  background: rgba(255,255,255,0.03) !important;
+  border-color: rgba(139,145,160,0.3) !important;
+}
+
+/* MCP flow tool cards — border brightens */
+.hp-tool-card {
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.hp-tool-card:hover {
+  border-color: rgba(59,130,246,0.5) !important;
+  background: rgba(59,130,246,0.04) !important;
+}
+
+/* MCP three-pillar cards — background tints subtly */
+.hp-pillar-card {
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.hp-pillar-card:hover {
+  background: rgba(255,255,255,0.02) !important;
+}
+
+/* ── driver.js tour popover — dark theme override ───────────────── */
+.pis-tour-popover.driver-popover {
+  background: #0d1117;
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 2px;
+  color: rgba(255,255,255,0.85);
+  font-family: var(--font-roboto, sans-serif);
+  max-width: 320px;
+}
+.pis-tour-popover .driver-popover-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: -0.01em;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.pis-tour-popover .driver-popover-description {
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.6);
+}
+.pis-tour-popover .driver-popover-footer button {
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid rgba(59,130,246,0.4);
+  color: #3b82f6;
+  cursor: pointer;
+  border-radius: 0;
+  text-shadow: none !important;
+}
+.pis-tour-popover .driver-popover-footer button:hover {
+  background: rgba(59,130,246,0.08);
+  text-shadow: none !important;
+}
+.pis-tour-popover .driver-popover-close-btn {
+  color: rgba(255,255,255,0.4);
+  background: transparent;
+  border: none;
+}
+.pis-tour-popover .driver-popover-progress-text {
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.35);
+}

@@ -1,5 +1,10 @@
+export const dynamic = "force-dynamic";
+
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
 import { createResumeClient } from "@/lib/supabase/resume";
 import type { ContactLead, ResumeUser } from "@/lib/types";
+import { DeleteLeadButton, DeleteUserButton } from "./DeleteButtons";
 
 function formatDate(ts: string | null) {
   if (!ts) return "—";
@@ -32,6 +37,9 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export default async function LeadsPage() {
+  const user = await getCurrentUser();
+  if (!user?.isOwner) redirect("/dashboard");
+
   const supabase = createResumeClient();
 
   const [leadsRes, usersRes] = await Promise.all([
@@ -206,12 +214,15 @@ export default async function LeadsPage() {
                       </span>
                     )}
                   </div>
-                  <span
-                    className="font-label text-outline flex-shrink-0"
-                    style={{ fontSize: "0.52rem", letterSpacing: "0.08em" }}
-                  >
-                    {formatDate(lead.created_at)}
-                  </span>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span
+                      className="font-label text-outline"
+                      style={{ fontSize: "0.52rem", letterSpacing: "0.08em" }}
+                    >
+                      {formatDate(lead.created_at)}
+                    </span>
+                    <DeleteLeadButton id={lead.id} />
+                  </div>
                 </div>
                 {lead.subject && (
                   <div
@@ -307,12 +318,15 @@ export default async function LeadsPage() {
                       </span>
                     )}
                   </div>
-                  <span
-                    className="font-label text-outline flex-shrink-0"
-                    style={{ fontSize: "0.52rem", letterSpacing: "0.08em" }}
-                  >
-                    {formatDate(user.created_at)}
-                  </span>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span
+                      className="font-label text-outline"
+                      style={{ fontSize: "0.52rem", letterSpacing: "0.08em" }}
+                    >
+                      {formatDate(user.created_at)}
+                    </span>
+                    <DeleteUserButton id={user.id} />
+                  </div>
                 </div>
               </div>
             ))}

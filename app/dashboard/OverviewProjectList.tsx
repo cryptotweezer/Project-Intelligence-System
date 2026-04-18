@@ -154,7 +154,7 @@ function SortableCard({ project }: { project: ProjectWithSteps }) {
       >
         ⠿
       </div>
-      <Link href={`/dashboard/projects/${project.id}`} style={{ flex: 1, display: "block" }}>
+      <Link href={`/dashboard/projects/${project.slug}`} style={{ flex: 1, display: "block" }}>
         <CardContent project={project} />
       </Link>
     </div>
@@ -284,7 +284,7 @@ export default function OverviewProjectList({ projects }: { projects: ProjectWit
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={ordered.map((p) => p.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-2">
+            <div data-tour="project-cards" className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-2">
               {ordered.map((project) => (
                 <SortableCard key={project.id} project={project} />
               ))}
@@ -314,7 +314,7 @@ export function SortControls({
   onActivate: (mode: SortMode) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-6">
+    <div data-tour="sort-controls" className="flex flex-wrap items-center gap-2 mb-6">
       <span className="font-label text-outline" style={{ fontSize: "0.52rem", letterSpacing: "0.15em" }}>
         SORT
       </span>

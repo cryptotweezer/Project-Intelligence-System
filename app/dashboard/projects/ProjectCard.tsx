@@ -53,7 +53,7 @@ export default function ProjectCard({ project, expanded, dimmed, onToggle, dragH
     if ((e.target as HTMLElement).closest("a")) return;
     const selection = window.getSelection();
     if (selection && selection.toString().length > 0) return;
-    router.push(`/dashboard/projects/${project.id}`);
+    router.push(`/dashboard/projects/${project.slug}`);
   }
 
   function handleHeaderClick() {
