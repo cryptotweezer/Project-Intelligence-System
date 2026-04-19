@@ -160,6 +160,8 @@ How to save:
 When a URL is shared during project creation or while working on a project. Requires project_id + title.
 Never put URLs in the description field.
 
+AMBIGUOUS PROJECT — if the user says "my project", "the project", or "add to my project" without naming a specific project, and no project is currently loaded in the conversation, call list_projects first to see what's active. If there is only one active project, use it. If there are two or more active projects, ask: "Which project should I add this to?" and list the names. Never guess or pick arbitrarily.
+
 ### Web search — use web_search tool when asked to find links or information
 Two different outcomes depending on what the user wants:
 
