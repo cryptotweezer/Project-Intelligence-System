@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fetchLinkMetadata } from "@/lib/links/metadata";
 import { generateSlug } from "@/lib/slug";
 import { DEVELOPER_INFO } from "@/lib/chat/developer-info";
+import { createResumeClient } from "@/lib/supabase/resume";
 import type { ChatCompletionTool } from "openai/resources/chat/completions";
 
 const GUEST_STEP_LIMIT = 30;
@@ -348,6 +349,24 @@ export const tools: ChatCompletionTool[] = [
       name: "get_developer_info",
       description: "Get information about Andres Henao, the developer who built this system. Call this when the user asks about the developer, who built this, who is Andres Henao, or requests contact/portfolio information.",
       parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "send_contact_message",
+      description: "Send a direct message from the current user to Andres Henao. Call this only after collecting name, email, and message from the user conversationally. Phone and subject are optional.",
+      parameters: {
+        type: "object",
+        required: ["name", "email", "message"],
+        properties: {
+          name:    { type: "string", description: "The sender's name" },
+          email:   { type: "string", description: "The sender's email address" },
+          phone:   { type: "string", description: "The sender's phone number (optional)" },
+          subject: { type: "string", description: "Message subject (optional)" },
+          message: { type: "string", description: "The message content" },
+        },
+      },
     },
   },
 
@@ -890,6 +909,18 @@ export async function executeTool(name: string, args: Args, context: Context): P
 
       case "get_developer_info": {
         return DEVELOPER_INFO;
+      }
+
+      case "send_contact_message": {
+        const { name, email, phone, subject, message } = args as {
+          name: string; email: string; phone?: string; subject?: string; message: string;
+        };
+        const resumeClient = createResumeClient();
+        const { error } = await resumeClient.from("contact_leads").insert({
+          name, email, phone: phone ?? null, subject: subject ?? null, message,
+        });
+        if (error) return `Error saving message: ${error.message}`;
+        return "Message sent successfully.";
       }
 
       // ── Skills ───────────────────────────────────────────────────────────────

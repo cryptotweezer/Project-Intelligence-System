@@ -4,6 +4,70 @@ import { useState, useRef, useEffect, useCallback } from "react";
 
 type Message = { role: "user" | "assistant"; content: string };
 
+// Renders assistant message content: strips markdown, makes URLs clickable blue links
+function MessageContent({ text }: { text: string }) {
+  // Step 1: convert markdown links [label](url) → keep label + url as segments
+  // Step 2: convert bare URLs to anchor tags
+  // Step 3: strip remaining markdown symbols (**, *, #, `)
+
+  const URL_REGEX = /https?:\/\/[^\s)\]]+/g;
+  const MD_LINK_REGEX = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+
+  // Split text into segments: plain text | markdown link | bare url
+  type Segment =
+    | { type: "text"; value: string }
+    | { type: "link"; href: string; label: string };
+
+  const segments: Segment[] = [];
+  let remaining = text;
+
+  // Replace markdown links first
+  remaining = remaining.replace(MD_LINK_REGEX, (_, label, url) => `\x00LINK:${url}:${label}\x00`);
+
+  // Then tag bare URLs that weren't part of a markdown link
+  remaining = remaining.replace(URL_REGEX, (url) => `\x00LINK:${url}:${url}\x00`);
+
+  // Strip remaining markdown: **, *, #, `
+  remaining = remaining.replace(/\*\*(.+?)\*\*/g, "$1");
+  remaining = remaining.replace(/\*(.+?)\*/g, "$1");
+  remaining = remaining.replace(/^#{1,6}\s+/gm, "");
+  remaining = remaining.replace(/`([^`]+)`/g, "$1");
+
+  // Split on our markers
+  const parts = remaining.split(/\x00LINK:(.+?):(.+?)\x00/);
+  // parts pattern: [text, url, label, text, url, label, ...]
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 3 === 0) {
+      if (parts[i]) segments.push({ type: "text", value: parts[i] });
+    } else if (i % 3 === 1) {
+      const url = parts[i];
+      const label = parts[i + 1] ?? url;
+      segments.push({ type: "link", href: url, label });
+      i++; // skip label index
+    }
+  }
+
+  return (
+    <>
+      {segments.map((seg, idx) =>
+        seg.type === "link" ? (
+          <a
+            key={idx}
+            href={seg.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#3b82f6", textDecoration: "underline", wordBreak: "break-all" }}
+          >
+            {seg.label}
+          </a>
+        ) : (
+          <span key={idx}>{seg.value}</span>
+        )
+      )}
+    </>
+  );
+}
+
 function RobotIcon({ size = 22, color = "currentColor" }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -323,7 +387,9 @@ export default function ChatWidget({ userId, isOwner }: { userId: string; isOwne
                         }),
                   }}
                 >
-                  {msg.content}
+                  {msg.role === "assistant"
+                    ? <MessageContent text={msg.content} />
+                    : msg.content}
                 </div>
               </div>
             ))}
