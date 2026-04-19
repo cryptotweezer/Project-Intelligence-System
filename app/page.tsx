@@ -162,6 +162,7 @@ export default function HomePage() {
   const [signingIn, setSigningIn] = useState(false);
   const [navUser, setNavUser] = useState<{ email: string; avatarUrl?: string } | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [hoveredProject, setHoveredProject] = useState<string | null>(null);
   const { resolvedTheme } = useTheme();
   const typedTool = useTypingEffect();
 
@@ -294,11 +295,19 @@ export default function HomePage() {
         <div className="animate-fade-in" style={{ maxWidth: "800px" }}>
 
           <div
-            className="font-label mb-6"
-            style={{ fontSize: "0.58rem", letterSpacing: "0.3em", color: "var(--accent)" }}
+            className="font-label"
+            style={{ fontSize: "0.58rem", letterSpacing: "0.3em", color: "var(--accent)", marginBottom: "6px" }}
           >
             AI-NATIVE PROJECT MANAGEMENT
           </div>
+          <div
+            style={{
+              width: "40px",
+              height: "1px",
+              background: "linear-gradient(90deg, transparent, rgba(59,130,246,0.6), transparent)",
+              margin: "0 auto 20px",
+            }}
+          />
 
           <h1
             className="font-display mb-6"
@@ -328,11 +337,10 @@ export default function HomePage() {
 
           {/* Typing effect — small, tool names */}
           <div
-            className="font-label mb-8"
+            className="font-label hp-works-with mb-8"
             style={{
               fontSize: "0.6rem",
               letterSpacing: "0.15em",
-              color: "var(--text-dim)",
             }}
           >
             WORKS WITH{" "}
@@ -489,7 +497,7 @@ export default function HomePage() {
             <div>
               <div
                 className="font-label mb-3"
-                style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "#22d3ee" }}
+                style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--accent)" }}
               >
                 BUILT-IN AGENT
               </div>
@@ -585,16 +593,24 @@ export default function HomePage() {
         <div className="mb-10 md:mb-16 text-center" style={{ maxWidth: "640px", margin: "0 auto 2.5rem" }}>
           <div
             className="font-label mb-3"
-            style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "#d1bcff" }}
+            style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--accent)" }}
           >
             ARCHITECTURE
           </div>
           <h2
-            className="font-display mb-5"
-            style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", letterSpacing: "-0.02em", color: "var(--text-primary)" }}
+            className="font-display"
+            style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", letterSpacing: "-0.02em", color: "var(--text-primary)", marginBottom: "10px" }}
           >
             One database. Every AI. Full context.
           </h2>
+          <div
+            style={{
+              width: "40px",
+              height: "1px",
+              background: "linear-gradient(90deg, transparent, rgba(59,130,246,0.6), transparent)",
+              margin: "0 auto 20px",
+            }}
+          />
           <p style={{ fontSize: "0.9rem", lineHeight: 1.75, color: "var(--text-muted)" }}>
             Connect any AI tool via the Supabase MCP and it reads your project instantly. Steps, session logs, expected results, priorities, agent history. Everything is there. The context never disappears because it was never just in a chat window.
           </p>
@@ -740,6 +756,133 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── DASH SKILLS ─────────────────────────────────────────────── */}
+      <section
+        className="relative z-10 px-6 md:px-10 lg:px-16 py-14 md:py-24"
+        style={{
+          background: "var(--bg-base)",
+          borderTop: "1px solid var(--border-subtle)",
+          borderBottom: "1px solid var(--border-subtle)",
+        }}
+      >
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div className="mb-10 md:mb-16 text-center" style={{ maxWidth: "640px", margin: "0 auto 2.5rem" }}>
+            <div
+              className="font-label mb-3"
+              style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--accent)" }}
+            >
+              SKILLS
+            </div>
+            <h2
+              className="font-display"
+              style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", letterSpacing: "-0.02em", color: "var(--text-primary)", marginBottom: "10px" }}
+            >
+              Install new skills into Dash
+            </h2>
+            <div
+              style={{
+                width: "40px",
+                height: "1px",
+                background: "linear-gradient(90deg, transparent, rgba(59,130,246,0.6), transparent)",
+                margin: "0 auto 20px",
+              }}
+            />
+            <p style={{ fontSize: "0.9rem", lineHeight: 1.75, color: "var(--text-muted)" }}>
+              Dash skills are custom instruction sets stored in the database. Create a skill, give it a /command, and Dash reads it and applies it every time you invoke it. Any AI connected via Supabase MCP can create or update skills too.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+            {[
+              {
+                icon: "◎",
+                color: "#22d3ee",
+                title: "Slash commands",
+                desc: "Each skill has its own /command. Type /human, /pm, /analyze — whatever you created. Dash reads the skill from the database and applies it to your message.",
+              },
+              {
+                icon: "◈",
+                color: "#3b82f6",
+                title: "Any AI can install skills",
+                desc: "Connect Claude Code or Cursor via Supabase MCP and they can create, read, and update skills directly. Expand Dash's capabilities without touching the dashboard.",
+              },
+              {
+                icon: "✦",
+                color: "#d1bcff",
+                title: "User-controlled",
+                desc: "Create skills from the dashboard, modify the command, edit the instructions, toggle them on or off. Full control without needing a developer.",
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="p-6 hp-feature-card"
+                style={{
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border-subtle)",
+                  borderTop: `2px solid ${item.color}35`,
+                }}
+              >
+                <div style={{ fontSize: "1.1rem", color: item.color, marginBottom: "14px" }}>{item.icon}</div>
+                <div className="font-label mb-3" style={{ fontSize: "0.62rem", letterSpacing: "0.1em", color: "var(--text-primary)" }}>
+                  {item.title}
+                </div>
+                <p style={{ fontSize: "0.82rem", lineHeight: 1.65, color: "var(--text-muted)" }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Example skill invocation */}
+          <div
+            style={{
+              background: "var(--bg-chat)",
+              border: "1px solid var(--border)",
+              borderLeft: "2px solid rgba(34,211,238,0.4)",
+              maxWidth: "720px",
+              margin: "0 auto",
+            }}
+          >
+            <div
+              className="flex items-center gap-3 px-4 py-3"
+              style={{ borderBottom: "1px solid var(--border-subtle)" }}
+            >
+              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3ee", boxShadow: "0 0 8px #22d3ee" }} />
+              <span className="font-label" style={{ fontSize: "0.55rem", letterSpacing: "0.15em", color: "#22d3ee" }}>
+                DASH / SKILLS IN ACTION
+              </span>
+            </div>
+            <div className="p-4 space-y-3" style={{ fontSize: "0.78rem", lineHeight: 1.55 }}>
+              {[
+                { role: "user", text: "/dev Review the auth setup in my SaaS project — any security issues?" },
+                { role: "dash", text: "Skill loaded: Software Development Expert. Loading your project now. Two issues: storing session tokens without expiry is a hard blocker, and there is no rate limiting on the login endpoint. Fix both before any public access. I can update the relevant steps with these as blockers." },
+                { role: "user", text: "/pm We have 6 weeks left — are we on track?" },
+                { role: "dash", text: "Skill loaded: Project Management. At 40% completion with 6 weeks out, you are behind. Steps 4 and 5 are still pending and they block everything in phase 3. Realistically you need both done by end of next week or the deadline is at risk. Recommend flagging step 4 as Urgent now." },
+              ].map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div
+                    style={{
+                      maxWidth: "88%",
+                      padding: "8px 12px",
+                      background: msg.role === "user" ? "var(--bg-msg-user)" : "var(--bg-msg-assistant)",
+                      border: `1px solid ${msg.role === "user" ? "var(--border-msg-user)" : "var(--border-msg-assistant)"}`,
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    {msg.role === "user" && msg.text.startsWith("/") && (
+                      <span style={{ color: "#22d3ee", fontWeight: 600 }}>
+                        {msg.text.split(" ")[0]}{" "}
+                      </span>
+                    )}
+                    {msg.role === "user" && msg.text.startsWith("/")
+                      ? msg.text.slice(msg.text.indexOf(" ") + 1)
+                      : msg.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── TECH STACK ──────────────────────────────────────────────── */}
       <section
         className="relative z-10 px-6 md:px-10 py-10"
@@ -769,26 +912,36 @@ export default function HomePage() {
 
       {/* ── OTHER PROJECTS ──────────────────────────────────────────── */}
       <section className="relative z-10 px-6 md:px-10 lg:px-16 py-14 md:py-24" style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <div className="mb-8 md:mb-12">
+        <div className="mb-10 md:mb-14 text-center" style={{ maxWidth: "640px", margin: "0 auto 2.5rem" }}>
           <div
             className="font-label mb-3"
-            style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--text-muted)" }}
+            style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--accent)" }}
           >
-            MORE WORK
+            PORTFOLIO
           </div>
           <h2
             className="font-display"
-            style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", letterSpacing: "-0.02em", color: "var(--text-primary)" }}
+            style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", letterSpacing: "-0.02em", color: "var(--text-primary)", marginBottom: "8px" }}
           >
             Other projects
           </h2>
           <div
-            className="font-label mt-2"
-            style={{ fontSize: "0.6rem", letterSpacing: "0.12em", color: "var(--text-muted)" }}
+            style={{
+              width: "40px",
+              height: "1px",
+              background: "linear-gradient(90deg, transparent, rgba(59,130,246,0.6), transparent)",
+              margin: "0 auto 16px",
+            }}
+          />
+          <div
+            className="font-label mb-3"
+            style={{ fontSize: "0.55rem", letterSpacing: "0.12em", color: "var(--text-muted)" }}
           >
             by Andres Henao
           </div>
-          <div style={{ width: "48px", height: "1px", background: "linear-gradient(90deg, var(--border), transparent)", marginTop: "12px" }} />
+          <p style={{ fontSize: "0.85rem", lineHeight: 1.7, color: "var(--text-muted)" }}>
+            More production-grade applications across cybersecurity, AI, and developer tooling. Each one built to solve a real problem with real technology.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -796,10 +949,14 @@ export default function HomePage() {
             <div
               key={proj.name}
               className="p-6 flex flex-col"
+              onMouseEnter={() => setHoveredProject(proj.name)}
+              onMouseLeave={() => setHoveredProject(null)}
               style={{
                 background: proj.accentBg,
-                border: `1px solid ${proj.accentBorder}`,
+                border: `1px solid ${hoveredProject === proj.name ? proj.accent + "60" : proj.accentBorder}`,
                 borderLeft: `3px solid ${proj.accent}50`,
+                boxShadow: hoveredProject === proj.name ? `0 0 28px ${proj.accent}22` : "none",
+                transition: "border-color 0.2s ease, box-shadow 0.2s ease",
               }}
             >
               <div className="flex items-start justify-between gap-4 mb-4">
@@ -885,7 +1042,7 @@ export default function HomePage() {
           <div className="mb-10 text-center">
             <div
               className="font-label mb-2"
-              style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--text-dim)" }}
+              style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--text-primary)" }}
             >
               GET STARTED
             </div>
@@ -944,9 +1101,9 @@ export default function HomePage() {
             style={{
               fontSize: "0.48rem",
               letterSpacing: "0.2em",
-              color: "var(--text-dim)",
-              border: "1px solid var(--border-subtle)",
-              padding: "2px 10px",
+              color: "var(--text-primary)",
+              border: "1px solid var(--border)",
+              padding: "3px 12px",
               display: "inline-block",
               marginBottom: "12px",
             }}
@@ -982,7 +1139,14 @@ export default function HomePage() {
         className="relative z-10 px-6 md:px-10 py-8 flex flex-col md:flex-row items-center justify-between gap-4"
         style={{ borderTop: "1px solid var(--border-subtle)" }}
       >
-        <div className="flex items-center gap-6">
+        <div className="flex items-center" style={{ gap: "10px" }}>
+          {mounted && (
+            <img
+              src={resolvedTheme === "light" ? "/images/logo_black.png" : "/images/logo_white.png"}
+              alt="logo"
+              style={{ width: "22px", height: "22px", objectFit: "contain", flexShrink: 0 }}
+            />
+          )}
           <span className="font-display" style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>
             PROJECT <span style={{ color: "var(--accent)" }}>INTEL</span>
           </span>
@@ -994,6 +1158,7 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           {[
             { label: "PORTFOLIO", url: "https://cv.andreshenao.com.au/" },
+            { label: "LINKEDIN", url: "https://www.linkedin.com/in/andreshenao/" },
             { label: "WATCHTOWER", url: "https://sentinel.andreshenao.com.au/" },
             { label: "GITHUB", url: "https://github.com/cryptotweezer/Project-Intelligence-System" },
           ].map((link) => (

@@ -1,7 +1,10 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { fetchLinkMetadata } from "@/lib/links/metadata";
 import { generateSlug } from "@/lib/slug";
+import { DEVELOPER_INFO } from "@/lib/chat/developer-info";
 import type { ChatCompletionTool } from "openai/resources/chat/completions";
+
+const GUEST_STEP_LIMIT = 30;
 
 // ── Tool Definitions ─────────────────────────────────────────────────────────
 
@@ -320,6 +323,106 @@ export const tools: ChatCompletionTool[] = [
       },
     },
   },
+
+  // ── Web search ───────────────────────────────────────────────────────────────
+  {
+    type: "function",
+    function: {
+      name: "web_search",
+      description: "Search the web for information, URLs, or references. Use when the user asks you to find a link, look something up, or search for an example. After getting results, save the best URL using create_link (if in project context) or save_link (if no project context).",
+      parameters: {
+        type: "object",
+        required: ["query"],
+        properties: {
+          query: { type: "string", description: "The search query" },
+          max_results: { type: "number", description: "Max results to return (default: 5)" },
+        },
+      },
+    },
+  },
+
+  // ── Developer info ───────────────────────────────────────────────────────────
+  {
+    type: "function",
+    function: {
+      name: "get_developer_info",
+      description: "Get information about Andres Henao, the developer who built this system. Call this when the user asks about the developer, who built this, who is Andres Henao, or requests contact/portfolio information.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+
+  // ── Skills ───────────────────────────────────────────────────────────────────
+  {
+    type: "function",
+    function: {
+      name: "create_skill",
+      description: "Create a new Dash skill for the user. Requires user confirmation before creating.",
+      parameters: {
+        type: "object",
+        required: ["name", "command", "content"],
+        properties: {
+          name:        { type: "string", description: "Skill name" },
+          command:     { type: "string", description: "Slash command (e.g. '/dev')" },
+          content:     { type: "string", description: "Full skill instructions" },
+          description: { type: "string", description: "Short description" },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "update_skill",
+      description: "Update an existing skill by its command (e.g. '/pm'). Can update name, description, content, or is_active.",
+      parameters: {
+        type: "object",
+        required: ["command"],
+        properties: {
+          command:     { type: "string", description: "The skill's slash command (e.g. '/pm')" },
+          name:        { type: "string" },
+          description: { type: "string" },
+          content:     { type: "string" },
+          is_active:   { type: "boolean" },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "delete_skill",
+      description: "Delete a skill by its command. Requires user confirmation before deleting.",
+      parameters: {
+        type: "object",
+        required: ["command"],
+        properties: {
+          command: { type: "string", description: "The skill's slash command (e.g. '/pm')" },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_skills",
+      description: "List all available Dash skills for this user. Returns skill name, command, and description. Call this when the user asks what skills are available or what slash commands exist.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "read_skill",
+      description: "Read the full content of a skill by its command (e.g. '/human', '/pm'). Call this when the user invokes a skill via /command at the start of their message.",
+      parameters: {
+        type: "object",
+        required: ["command"],
+        properties: {
+          command: { type: "string", description: "The slash command exactly as the user typed (e.g. '/human', '/pm')" },
+        },
+      },
+    },
+  },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -496,6 +599,11 @@ export async function executeTool(name: string, args: Args, context: Context): P
         const { count } = await (supabaseAdmin.from("project_steps") as any)
           .select("*", { count: "exact", head: true })
           .eq("project_id", args.project_id);
+
+        if (!context.isOwner && (count ?? 0) >= GUEST_STEP_LIMIT) {
+          return `Error: Guest accounts are limited to ${GUEST_STEP_LIMIT} steps per project. This project already has ${count} steps.`;
+        }
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabaseAdmin.from("project_steps") as any).insert({
           project_id: args.project_id,
@@ -747,6 +855,115 @@ export async function executeTool(name: string, args: Args, context: Context): P
           .update({ is_read: args.is_read }).eq("id", args.link_id).eq("user_id", context.userId);
         if (error) return `Error: ${error.message}`;
         return `Link ${args.link_id} marked as ${args.is_read ? "read" : "unread"}.`;
+      }
+
+      // ── Web search ───────────────────────────────────────────────────────────
+
+      case "web_search": {
+        const apiKey = process.env.TAVILY_API_KEY;
+        if (!apiKey) return "Web search is not configured (TAVILY_API_KEY missing).";
+        try {
+          const res = await fetch("https://api.tavily.com/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              api_key: apiKey,
+              query: args.query,
+              max_results: args.max_results ?? 5,
+              include_raw_content: false,
+            }),
+          });
+          const json = await res.json() as { results?: { title: string; url: string; content: string }[] };
+          if (!json.results || json.results.length === 0) return "No results found for that query.";
+          const results = json.results.map((r) => ({
+            title: r.title,
+            url: r.url,
+            snippet: r.content?.slice(0, 250) ?? "",
+          }));
+          return JSON.stringify(results);
+        } catch (e) {
+          return `Search failed: ${String(e)}`;
+        }
+      }
+
+      // ── Developer info ───────────────────────────────────────────────────────
+
+      case "get_developer_info": {
+        return DEVELOPER_INFO;
+      }
+
+      // ── Skills ───────────────────────────────────────────────────────────────
+
+      case "create_skill": {
+        if (!context.isOwner) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { count } = await (supabaseAdmin.from("dash_skills") as any)
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", context.userId);
+          if ((count ?? 0) >= 3) return "Error: Guest accounts are limited to 3 skills.";
+        }
+        const cmd = (args.command as string).startsWith("/") ? (args.command as string).toLowerCase() : `/${(args.command as string).toLowerCase()}`;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabaseAdmin.from("dash_skills") as any).insert({
+          user_id: context.userId,
+          name: args.name,
+          command: cmd,
+          content: args.content,
+          description: args.description ?? null,
+          is_active: true,
+        }).select().single();
+        if (error) return `Error: ${error.message}`;
+        return `Skill created: ${JSON.stringify(data)}`;
+      }
+
+      case "update_skill": {
+        const cmd = (args.command as string).startsWith("/") ? (args.command as string).toLowerCase() : `/${(args.command as string).toLowerCase()}`;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: existing } = await (supabaseAdmin.from("dash_skills") as any)
+          .select("id").eq("user_id", context.userId).eq("command", cmd).single() as { data: { id: string } | null };
+        if (!existing) return `Skill "${cmd}" not found.`;
+        const { command: _cmd, ...fields } = args; void _cmd;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabaseAdmin.from("dash_skills") as any)
+          .update(fields).eq("id", existing.id).eq("user_id", context.userId);
+        if (error) return `Error: ${error.message}`;
+        return `Skill "${cmd}" updated.`;
+      }
+
+      case "delete_skill": {
+        const cmd = (args.command as string).startsWith("/") ? (args.command as string).toLowerCase() : `/${(args.command as string).toLowerCase()}`;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabaseAdmin.from("dash_skills") as any)
+          .delete().eq("command", cmd).eq("user_id", context.userId);
+        if (error) return `Error: ${error.message}`;
+        return `Skill "${cmd}" deleted.`;
+      }
+
+      case "list_skills": {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabaseAdmin.from("dash_skills") as any)
+          .select("id, name, command, description, is_active")
+          .eq("user_id", context.userId)
+          .eq("is_active", true)
+          .order("created_at");
+        if (error) return `Error: ${error.message}`;
+        if (!data || data.length === 0) return "No skills configured yet.";
+        return JSON.stringify(data);
+      }
+
+      case "read_skill": {
+        const cmd = (args.command as string).startsWith("/")
+          ? args.command as string
+          : `/${args.command}`;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabaseAdmin.from("dash_skills") as any)
+          .select("name, content")
+          .eq("user_id", context.userId)
+          .eq("command", cmd)
+          .eq("is_active", true)
+          .single() as { data: { name: string; content: string } | null; error: { message: string } | null };
+        if (error || !data) return `Skill "${cmd}" not found. Check available skills with list_skills.`;
+        return `SKILL LOADED — ${data.name}\n\n${data.content}`;
       }
 
       default:

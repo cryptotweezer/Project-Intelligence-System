@@ -14,7 +14,8 @@ const ALL_NAV_ITEMS = [
   { href: "/dashboard/projects",  label: "PROJECTS",        icon: "◉" },
   { href: "/dashboard/completed", label: "COMPLETED TASKS", icon: "✓" },
   { href: "/dashboard/links",     label: "LINKS",           icon: "⊕" },
-  { href: "/dashboard/leads",     label: "LEAD TRACKER",    icon: "◎", ownerOnly: true },
+  { href: "/dashboard/skills",    label: "SKILLS",          icon: "◎" },
+  { href: "/dashboard/leads",     label: "LEAD TRACKER",    icon: "⬡", ownerOnly: true },
 ];
 
 export default function DashboardShell({
@@ -107,7 +108,13 @@ export default function DashboardShell({
               <Link
                 key={item.href}
                 href={item.href}
-                data-tour={item.href === "/dashboard/links" ? "links-nav" : undefined}
+                data-tour={
+                  item.href === "/dashboard/links"
+                    ? "links-nav"
+                    : item.href === "/dashboard/skills"
+                    ? "skills-nav"
+                    : undefined
+                }
                 className="flex items-center gap-3 px-3 py-2.5 group transition-all duration-150"
                 style={{
                   background:  isActive ? "var(--bg-nav-active)"      : "transparent",

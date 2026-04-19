@@ -57,6 +57,15 @@ export default function OnboardingTour({ show }: { show: boolean }) {
           },
         },
         {
+          element: "[data-tour='skills-nav']",
+          popover: {
+            title: "Dash Skills",
+            description: "Create custom skills that extend Dash's capabilities. Each skill has a /command — type it at the start of a message and Dash reads the skill and applies it. Any AI connected via MCP can create skills too.",
+            side: "right",
+            align: "start",
+          },
+        },
+        {
           element: "[data-tour='sort-controls']",
           popover: {
             title: "Sort Your Projects",

@@ -420,6 +420,14 @@ html.light .btn-primary:hover {
 
 /* ── Homepage hover effects ─────────────────────────────────────── */
 
+/* WORKS WITH label — white in dark, muted gray in light */
+.hp-works-with {
+  color: rgba(255,255,255,0.75);
+}
+html.light .hp-works-with {
+  color: #5a6488;
+}
+
 /* Outline buttons — border brightens, background tints */
 .hp-btn-outline {
   transition: border-color 0.18s ease, background 0.18s ease;
