@@ -38,11 +38,26 @@ PIS solves this by keeping all project state in a shared Supabase database. Step
 - Done steps are visually muted; completion percentage recalculates automatically as steps change
 - Add steps via a modal form; delete steps with automatic renumbering
 
+### Project Notes
+- Save freeform research, findings, and insights directly to a project
+- Stored in the `project_notes` table — separate from session logs, intended for reference material
+- Notes appear on the project detail page below Expected Result, always visible with an empty-state prompt when none exist
+- Scrollable container (capped at 480px height) — long notes do not push the page
+- Delete any note with one click (confirmation required)
+- Ask Dash to research a topic and save the findings as a note: "research the best libraries for X and save a note"
+
 ### Session Logging
 - Every significant action creates a permanent session log: summary, problems encountered, solutions applied, agent name, date
 - Logs are ordered newest-first and accumulate over the project lifetime
 - Any AI working on the project reads these logs to understand what happened before it arrived
 - Dash logs every session automatically — no manual input required
+
+### Dash Persistent Memory
+- Dash remembers key facts across conversations without any database storage
+- Facts are saved in `localStorage` under `dash-memory` (max 25 entries) and injected into every system prompt
+- Tell Dash to remember anything: "remember that this project uses React 18 and Supabase free tier"
+- Memory survives page refresh, tab changes, and navigation — cleared only by the user or by explicit instruction to Dash
+- Dash manages its own memory: adds new facts, replaces outdated ones, keeps the list concise
 
 ### Dash AI Agent
 - GPT-4o powered chat widget accessible from every dashboard page
@@ -133,6 +148,7 @@ In your Supabase project, open the **SQL Editor** and run:
 create table projects (
   id              uuid primary key default gen_random_uuid(),
   user_id         uuid references auth.users(id) on delete cascade,
+  slug            text not null,
   name            text not null,
   description     text,
   expected_result text,
@@ -217,6 +233,17 @@ create table dash_skills (
   unique (user_id, command)
 );
 
+-- Project notes (research, findings, insights)
+create table project_notes (
+  id         uuid primary key default gen_random_uuid(),
+  project_id uuid references projects(id) on delete cascade,
+  user_id    uuid references auth.users(id) on delete cascade,
+  title      text,
+  content    text not null,
+  agent      text default 'Dash',
+  created_at timestamptz default now()
+);
+
 -- AI agent event log (read-only in UI)
 create table agent_logs (
   id         uuid primary key default gen_random_uuid(),
@@ -237,6 +264,7 @@ alter table project_links  enable row level security;
 alter table links          enable row level security;
 alter table guest_limits   enable row level security;
 alter table dash_skills    enable row level security;
+alter table project_notes  enable row level security;
 
 -- Policy: users only see their own rows
 create policy "own_rows" on projects       for all using (user_id = auth.uid());
@@ -246,6 +274,7 @@ create policy "own_rows" on project_links  for all using (user_id = auth.uid());
 create policy "own_rows" on links          for all using (user_id = auth.uid());
 create policy "own_rows" on guest_limits   for all using (user_id = auth.uid());
 create policy "own_rows" on dash_skills    for all using (user_id = auth.uid());
+create policy "own_rows" on project_notes  for all using (user_id = auth.uid());
 ```
 
 ### 5. Add the Dash message counter function
@@ -486,6 +515,7 @@ With the MCP active, any AI can query your database directly. The most useful ta
 | `project_steps` | All steps for a project, ordered by step_number, with status and notes |
 | `project_logs` | Full session history — what each AI did, problems hit, solutions found |
 | `project_links` | Reference URLs tied to each project |
+| `project_notes` | Research findings and insights saved to a project |
 | `dash_skills` | Custom instruction sets per user, invoked by /command in Dash |
 
 **Useful queries to run when starting a session:**
