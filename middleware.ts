@@ -1,27 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import arcjet, { shield } from "@arcjet/next";
-
-// Shield runs on every matched request — blocks SQLi, XSS, path traversal, etc.
-const aj = arcjet({
-  key: process.env.ARCJET_KEY!,
-  characteristics: ["ip.src"],
-  rules: [shield({ mode: "LIVE" })],
-});
 
 export async function middleware(request: NextRequest) {
-  // ── Arcjet Shield — API routes only ───────────────────────────────────────
-  // Page navigation skips this — API routes already have per-route Arcjet.
-  // Running Shield on every page load adds an external round-trip per click.
-  if (request.nextUrl.pathname.startsWith("/api/")) {
-    const decision = await aj.protect(request);
-    if (decision.isDenied()) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-  }
-
   // ── Supabase auth — dashboard routes only ────────────────────────────────
   // Public routes (/, /login) pass through immediately — no Supabase round-trip.
+  // Arcjet runs per API route (chat, fetch-link-meta) — not here, keeps middleware small.
   if (!request.nextUrl.pathname.startsWith("/dashboard")) {
     return NextResponse.next();
   }
