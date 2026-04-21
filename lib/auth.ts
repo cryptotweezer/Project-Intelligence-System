@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type AppUser = {
@@ -8,7 +9,7 @@ export type AppUser = {
   avatarUrl?: string;
 };
 
-export async function getCurrentUser(): Promise<AppUser | null> {
+export const getCurrentUser = cache(async (): Promise<AppUser | null> => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -19,4 +20,4 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     name: user.user_metadata?.full_name || user.user_metadata?.name || undefined,
     avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || undefined,
   };
-}
+});

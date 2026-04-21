@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { createClient } from "@/lib/supabase/client";
@@ -37,6 +37,50 @@ function useTypingEffect() {
   }, [charIdx, deleting, wordIdx]);
 
   return displayed;
+}
+
+// ── Scroll reveal hook ────────────────────────────────────────────────────────
+
+function useInView(threshold = 0.1) {
+  const ref = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold, rootMargin: "0px 0px -100px 0px" }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+
+  return [ref, visible] as const;
+}
+
+// Section-level reveal: fade up from 28px
+function reveal(visible: boolean, delay = 0): React.CSSProperties {
+  return {
+    opacity: visible ? 1 : 0,
+    transform: visible ? "translateY(0)" : "translateY(28px)",
+    transition: `opacity 0.85s cubic-bezier(0.16,1,0.3,1) ${delay}s, transform 0.85s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
+  };
+}
+
+// Card-level reveal: lighter motion, staggered by index
+function cardReveal(visible: boolean, index: number): React.CSSProperties {
+  const delay = index * 0.1;
+  return {
+    opacity: visible ? 1 : 0,
+    transform: visible ? "translateY(0)" : "translateY(20px)",
+    transition: `opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}s, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
+  };
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -81,8 +125,8 @@ const FEATURES = [
   {
     icon: "◐",
     color: "#f59e0b",
-    title: "Real-Time Progress Tracking",
-    desc: "Every project shows a live completion percentage that updates automatically as steps are marked done. At a glance you know exactly how far along each project is. No manual tracking needed.",
+    title: "Research on Demand",
+    desc: "Tell Dash to research your project and it searches the web, picks the best resources, and saves them directly to the project as reference links. Ready before you take your first step.",
   },
   {
     icon: "◧",
@@ -92,9 +136,9 @@ const FEATURES = [
   },
   {
     icon: "◫",
-    color: "#3b82f6",
-    title: "Full Project Lifecycle",
-    desc: "Every project moves through a defined lifecycle from idea to completion. Steps must all be done before a project can be marked complete. Nothing slips through without being tracked.",
+    color: "#d1bcff",
+    title: "Project Notes",
+    desc: "Mid-conversation with an AI and something clicks? Tell it to save the insight. Notes attach directly to the project so the next AI, whether Dash, Claude, or any other, reads them as part of the full context.",
   },
 ];
 
@@ -166,6 +210,17 @@ export default function HomePage() {
   const { resolvedTheme } = useTheme();
   const typedTool = useTypingEffect();
 
+  // Scroll reveal refs
+  const [bannerRef, bannerVisible]       = useInView();
+  const [featuresRef, featuresVisible]   = useInView(0.05);
+  const [dashAgentRef, dashAgentVisible] = useInView(0.08);
+  const [mcpRef, mcpVisible]             = useInView(0.06);
+  const [skillsRef, skillsVisible]       = useInView(0.06);
+  const [techRef, techVisible]           = useInView(0.2);
+  const [projectsRef, projectsVisible]   = useInView(0.06);
+  const [accessRef, accessVisible]       = useInView(0.2);
+  const [openSourceRef, openSourceVisible] = useInView(0.2);
+
   useEffect(() => {
     setMounted(true);
     // Check if a user is already logged in
@@ -232,7 +287,7 @@ export default function HomePage() {
                 style={{ display: "flex", alignItems: "center", gap: "6px", background: "transparent", border: "none", cursor: "pointer", padding: "2px" }}
               >
                 {navUser.avatarUrl ? (
-                  <img src={navUser.avatarUrl} alt="avatar" style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border-subtle)" }} />
+                  <img src={navUser.avatarUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border-subtle)" }} />
                 ) : (
                   <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 600, color: "#000d1a" }}>
                     {navUser.email[0].toUpperCase()}
@@ -392,11 +447,13 @@ export default function HomePage() {
 
       {/* ── KEY CONCEPT BANNER ──────────────────────────────────────── */}
       <section
+        ref={bannerRef as React.RefObject<HTMLElement>}
         className="relative z-10 px-6 md:px-10 py-10 md:py-16"
         style={{
           background: "var(--bg-base)",
           borderTop: "1px solid var(--border-subtle)",
           borderBottom: "1px solid var(--border-subtle)",
+          ...reveal(bannerVisible),
         }}
       >
         <div
@@ -420,7 +477,11 @@ export default function HomePage() {
               color: "#d1bcff",
             },
           ].map((stat, i) => (
-            <div key={stat.value} className="px-4 py-6 md:py-0">
+            <div
+              key={stat.value}
+              className="px-4 py-6 md:py-0"
+              style={cardReveal(bannerVisible, i)}
+            >
               <div
                 className="font-display mb-3"
                 style={{ fontSize: "1.35rem", letterSpacing: "-0.02em", color: stat.color }}
@@ -436,8 +497,12 @@ export default function HomePage() {
       </section>
 
       {/* ── FEATURES ────────────────────────────────────────────────── */}
-      <section className="relative z-10 px-6 md:px-10 lg:px-16 py-14 md:py-24" style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <div className="mb-8 md:mb-12">
+      <section
+        ref={featuresRef as React.RefObject<HTMLElement>}
+        className="relative z-10 px-6 md:px-10 lg:px-16 py-14 md:py-24"
+        style={{ maxWidth: "1200px", margin: "0 auto" }}
+      >
+        <div className="mb-8 md:mb-12" style={reveal(featuresVisible)}>
           <div
             className="font-label mb-3"
             style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--accent)" }}
@@ -454,7 +519,7 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {FEATURES.map((f) => (
+          {FEATURES.map((f, i) => (
             <div
               key={f.title}
               className="p-6 hp-feature-card"
@@ -462,6 +527,7 @@ export default function HomePage() {
                 background: "var(--bg-card)",
                 border: "1px solid var(--border-subtle)",
                 borderTop: `2px solid ${f.color}35`,
+                ...cardReveal(featuresVisible, i),
               }}
             >
               <div style={{ fontSize: "1.1rem", color: f.color, marginBottom: "14px" }}>
@@ -483,6 +549,7 @@ export default function HomePage() {
 
       {/* ── DASH AGENT ──────────────────────────────────────────────── */}
       <section
+        ref={dashAgentRef as React.RefObject<HTMLElement>}
         className="relative z-10 px-6 md:px-10 lg:px-16 py-14 md:py-24"
         style={{
           background: "var(--bg-base)",
@@ -494,7 +561,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 
             {/* Left text */}
-            <div>
+            <div style={reveal(dashAgentVisible, 0)}>
               <div
                 className="font-label mb-3"
                 style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--accent)" }}
@@ -521,8 +588,8 @@ export default function HomePage() {
                   "Sets priority, agent, expected result, and category automatically",
                   "Any MCP-connected AI can continue the work instantly after",
                   "No context lost between the idea and the execution",
-                ].map((item) => (
-                  <div key={item} className="flex items-start gap-3">
+                ].map((item, i) => (
+                  <div key={item} className="flex items-start gap-3" style={cardReveal(dashAgentVisible, i)}>
                     <span style={{ color: "#22d3ee", flexShrink: 0, marginTop: "3px" }}>◈</span>
                     <span style={{ fontSize: "0.82rem", color: "var(--text-muted)", lineHeight: 1.55 }}>{item}</span>
                   </div>
@@ -537,6 +604,7 @@ export default function HomePage() {
                 border: "1px solid var(--border)",
                 borderLeft: "2px solid #22d3ee40",
                 overflow: "hidden",
+                ...reveal(dashAgentVisible, 0.18),
               }}
             >
               {/* Header */}
@@ -588,9 +656,16 @@ export default function HomePage() {
       </section>
 
       {/* ── MCP ARCHITECTURE ────────────────────────────────────────── */}
-      <section className="relative z-10 px-6 md:px-10 lg:px-16 py-14 md:py-24" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+      <section
+        ref={mcpRef as React.RefObject<HTMLElement>}
+        className="relative z-10 px-6 md:px-10 lg:px-16 py-14 md:py-24"
+        style={{ maxWidth: "1200px", margin: "0 auto" }}
+      >
 
-        <div className="mb-10 md:mb-16 text-center" style={{ maxWidth: "640px", margin: "0 auto 2.5rem" }}>
+        <div
+          className="mb-10 md:mb-16 text-center"
+          style={{ maxWidth: "640px", margin: "0 auto 2.5rem", ...reveal(mcpVisible) }}
+        >
           <div
             className="font-label mb-3"
             style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--accent)" }}
@@ -618,7 +693,7 @@ export default function HomePage() {
 
         {/* Flow diagram */}
         {/* Mobile: 2-col grid, no arrows */}
-        <div className="grid grid-cols-2 gap-2 mb-10 md:hidden">
+        <div className="grid grid-cols-2 gap-2 mb-10 md:hidden" style={reveal(mcpVisible, 0.15)}>
           {[
             { label: "DASH", sub: "Bootstrap in chat", color: "#22d3ee" },
             { label: "CLAUDE CODE", sub: "Build and implement", color: "#3b82f6" },
@@ -646,7 +721,7 @@ export default function HomePage() {
         </div>
 
         {/* Desktop: horizontal flow with arrows */}
-        <div className="hidden md:flex flex-wrap items-center justify-center gap-2 mb-16">
+        <div className="hidden md:flex flex-wrap items-center justify-center gap-2 mb-16" style={reveal(mcpVisible, 0.15)}>
           {[
             { label: "DASH", sub: "Bootstrap in chat", color: "#22d3ee" },
             { label: "CLAUDE CODE", sub: "Build and implement", color: "#3b82f6" },
@@ -715,7 +790,10 @@ export default function HomePage() {
         </div>
 
         {/* Three pillars */}
-        <div className="grid grid-cols-1 md:grid-cols-3 md:gap-px" style={{ border: "1px solid var(--border-subtle)", background: "var(--border-subtle)" }}>
+        <div
+          className="grid grid-cols-1 md:grid-cols-3 md:gap-px"
+          style={{ border: "1px solid var(--border-subtle)", background: "var(--border-subtle)" }}
+        >
           {[
             {
               title: "The database is the interface",
@@ -739,6 +817,7 @@ export default function HomePage() {
               style={{
                 background: "var(--bg-base)",
                 borderBottom: i < 2 ? "1px solid var(--border-subtle)" : "none",
+                ...cardReveal(mcpVisible, i + 1),
               }}
             >
               <div style={{ width: "24px", height: "2px", background: p.color, marginBottom: "16px" }} />
@@ -758,6 +837,7 @@ export default function HomePage() {
 
       {/* ── DASH SKILLS ─────────────────────────────────────────────── */}
       <section
+        ref={skillsRef as React.RefObject<HTMLElement>}
         className="relative z-10 px-6 md:px-10 lg:px-16 py-14 md:py-24"
         style={{
           background: "var(--bg-base)",
@@ -766,7 +846,10 @@ export default function HomePage() {
         }}
       >
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div className="mb-10 md:mb-16 text-center" style={{ maxWidth: "640px", margin: "0 auto 2.5rem" }}>
+          <div
+            className="mb-10 md:mb-16 text-center"
+            style={{ maxWidth: "640px", margin: "0 auto 2.5rem", ...reveal(skillsVisible) }}
+          >
             <div
               className="font-label mb-3"
               style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--accent)" }}
@@ -812,7 +895,7 @@ export default function HomePage() {
                 title: "User-controlled",
                 desc: "Create skills from the dashboard, modify the command, edit the instructions, toggle them on or off. Full control without needing a developer.",
               },
-            ].map((item) => (
+            ].map((item, i) => (
               <div
                 key={item.title}
                 className="p-6 hp-feature-card"
@@ -820,6 +903,7 @@ export default function HomePage() {
                   background: "var(--bg-card)",
                   border: "1px solid var(--border-subtle)",
                   borderTop: `2px solid ${item.color}35`,
+                  ...cardReveal(skillsVisible, i),
                 }}
               >
                 <div style={{ fontSize: "1.1rem", color: item.color, marginBottom: "14px" }}>{item.icon}</div>
@@ -839,6 +923,7 @@ export default function HomePage() {
               borderLeft: "2px solid rgba(34,211,238,0.4)",
               maxWidth: "720px",
               margin: "0 auto",
+              ...reveal(skillsVisible, 0.28),
             }}
           >
             <div
@@ -885,8 +970,13 @@ export default function HomePage() {
 
       {/* ── TECH STACK ──────────────────────────────────────────────── */}
       <section
+        ref={techRef as React.RefObject<HTMLElement>}
         className="relative z-10 px-6 md:px-10 py-10"
-        style={{ borderTop: "1px solid var(--border-subtle)", borderBottom: "1px solid var(--border-subtle)" }}
+        style={{
+          borderTop: "1px solid var(--border-subtle)",
+          borderBottom: "1px solid var(--border-subtle)",
+          ...reveal(techVisible),
+        }}
       >
         <div
           className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3"
@@ -911,8 +1001,15 @@ export default function HomePage() {
       </section>
 
       {/* ── OTHER PROJECTS ──────────────────────────────────────────── */}
-      <section className="relative z-10 px-6 md:px-10 lg:px-16 py-14 md:py-24" style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <div className="mb-10 md:mb-14 text-center" style={{ maxWidth: "640px", margin: "0 auto 2.5rem" }}>
+      <section
+        ref={projectsRef as React.RefObject<HTMLElement>}
+        className="relative z-10 px-6 md:px-10 lg:px-16 py-14 md:py-24"
+        style={{ maxWidth: "1200px", margin: "0 auto" }}
+      >
+        <div
+          className="mb-10 md:mb-14 text-center"
+          style={{ maxWidth: "640px", margin: "0 auto 2.5rem", ...reveal(projectsVisible) }}
+        >
           <div
             className="font-label mb-3"
             style={{ fontSize: "0.55rem", letterSpacing: "0.25em", color: "var(--accent)" }}
@@ -945,7 +1042,7 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {OTHER_PROJECTS.map((proj) => (
+          {OTHER_PROJECTS.map((proj, i) => (
             <div
               key={proj.name}
               className="p-6 flex flex-col"
@@ -956,7 +1053,9 @@ export default function HomePage() {
                 border: `1px solid ${hoveredProject === proj.name ? proj.accent + "60" : proj.accentBorder}`,
                 borderLeft: `3px solid ${proj.accent}50`,
                 boxShadow: hoveredProject === proj.name ? `0 0 28px ${proj.accent}22` : "none",
-                transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+                transition: `border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${i * 0.12}s, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${i * 0.12}s`,
+                opacity: projectsVisible ? 1 : 0,
+                transform: projectsVisible ? "translateY(0)" : "translateY(20px)",
               }}
             >
               <div className="flex items-start justify-between gap-4 mb-4">
@@ -1035,8 +1134,12 @@ export default function HomePage() {
 
       {/* ── ACCESS ──────────────────────────────────────────────────── */}
       <section
+        ref={accessRef as React.RefObject<HTMLElement>}
         className="relative z-10 flex flex-col items-center justify-center px-6 py-14 md:py-24"
-        style={{ borderTop: "1px solid var(--border-subtle)" }}
+        style={{
+          borderTop: "1px solid var(--border-subtle)",
+          ...reveal(accessVisible),
+        }}
       >
         <div style={{ width: "100%", maxWidth: "360px" }}>
           <div className="mb-10 text-center">
@@ -1092,8 +1195,13 @@ export default function HomePage() {
 
       {/* ── OPEN SOURCE BANNER ──────────────────────────────────────── */}
       <section
+        ref={openSourceRef as React.RefObject<HTMLElement>}
         className="relative z-10 px-6 md:px-10 py-10 text-center"
-        style={{ borderTop: "1px solid var(--border-subtle)", background: "var(--bg-base)" }}
+        style={{
+          borderTop: "1px solid var(--border-subtle)",
+          background: "var(--bg-base)",
+          ...reveal(openSourceVisible),
+        }}
       >
         <div style={{ maxWidth: "600px", margin: "0 auto" }}>
           <span

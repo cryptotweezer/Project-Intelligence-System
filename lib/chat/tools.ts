@@ -442,6 +442,73 @@ export const tools: ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "create_note",
+      description: "Save a note to a project. Use when the user asks to save, store, or keep something from the conversation — research findings, insights, summaries, decisions, or any content worth preserving for future AI sessions. Notes are separate from steps and logs.",
+      parameters: {
+        type: "object",
+        required: ["project_id", "content"],
+        properties: {
+          project_id: { type: "string" },
+          title:      { type: "string", description: "Short descriptive title. Infer from content if not given." },
+          content:    { type: "string", description: "The full note content. Well-formatted plain text." },
+          agent:      { type: "string", description: "AI that wrote the note. Default: Dash." },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_notes",
+      description: "List all notes for a project.",
+      parameters: {
+        type: "object",
+        required: ["project_id"],
+        properties: {
+          project_id: { type: "string" },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "delete_note",
+      description: "Delete a project note by id.",
+      parameters: {
+        type: "object",
+        required: ["note_id"],
+        properties: {
+          note_id: { type: "string" },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "save_memory",
+      description: "Persist key facts to the user's local memory across sessions. Call when: (1) user says 'remember that X' or 'recuerda que X', (2) after creating a project — remember its name and goal, (3) user states a recurring preference or constraint. Facts are injected at the start of every future session.",
+      parameters: {
+        type: "object",
+        required: ["facts"],
+        properties: {
+          facts: {
+            type: "array",
+            items: { type: "string" },
+            description: "Concise fact strings to remember. One sentence each. Example: 'Created project: Social Media Research (Apr 2026)', 'User prefers Urgent priority for anything deadline-driven', 'Brand name is OpenClaw'.",
+          },
+          replace: {
+            type: "boolean",
+            description: "If true, replace all existing memory with these facts. Default false (appends).",
+          },
+        },
+      },
+    },
+  },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -995,6 +1062,43 @@ export async function executeTool(name: string, args: Args, context: Context): P
           .single() as { data: { name: string; content: string } | null; error: { message: string } | null };
         if (error || !data) return `Skill "${cmd}" not found. Check available skills with list_skills.`;
         return `SKILL LOADED — ${data.name}\n\n${data.content}`;
+      }
+
+      case "create_note": {
+        const { data, error } = await (supabaseAdmin.from("project_notes") as never as Promise<never> as any)
+          .insert({
+            project_id: args.project_id,
+            user_id:    context.userId,
+            title:      args.title ?? null,
+            content:    args.content,
+            agent:      args.agent ?? "Dash",
+          }).select().single();
+        if (error) return `Error: ${error.message}`;
+        return `Note saved: ${JSON.stringify(data)}`;
+      }
+
+      case "list_notes": {
+        const { data, error } = await (supabaseAdmin.from("project_notes") as any)
+          .select("*")
+          .eq("project_id", args.project_id)
+          .eq("user_id", context.userId)
+          .order("created_at", { ascending: false });
+        if (error) return `Error: ${error.message}`;
+        if (!data || data.length === 0) return "No notes for this project.";
+        return JSON.stringify(data);
+      }
+
+      case "delete_note": {
+        const { error } = await (supabaseAdmin.from("project_notes") as any)
+          .delete().eq("id", args.note_id).eq("user_id", context.userId);
+        if (error) return `Error: ${error.message}`;
+        return `Note ${args.note_id} deleted.`;
+      }
+
+      case "save_memory": {
+        // Returns a marker — route handler captures this and sends it to the client for localStorage persistence
+        const facts = Array.isArray(args.facts) ? (args.facts as string[]) : [];
+        return JSON.stringify({ __memory_update__: facts, replace: args.replace ?? false });
       }
 
       default:

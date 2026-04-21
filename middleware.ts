@@ -1,7 +1,31 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import arcjet, { shield } from "@arcjet/next";
+
+// Shield runs on every matched request — blocks SQLi, XSS, path traversal, etc.
+const aj = arcjet({
+  key: process.env.ARCJET_KEY!,
+  characteristics: ["ip.src"],
+  rules: [shield({ mode: "LIVE" })],
+});
 
 export async function middleware(request: NextRequest) {
+  // ── Arcjet Shield — API routes only ───────────────────────────────────────
+  // Page navigation skips this — API routes already have per-route Arcjet.
+  // Running Shield on every page load adds an external round-trip per click.
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    const decision = await aj.protect(request);
+    if (decision.isDenied()) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
+  // ── Supabase auth — dashboard routes only ────────────────────────────────
+  // Public routes (/, /login) pass through immediately — no Supabase round-trip.
+  if (!request.nextUrl.pathname.startsWith("/dashboard")) {
+    return NextResponse.next();
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -12,6 +36,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setAll(cookiesToSet: any[]) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
@@ -29,17 +54,11 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Unauthenticated users trying to access dashboard → owner login
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
-
-  // /login is always reachable — the page itself handles existing sessions
-  // (owner may need to sign in with password even if a guest session is active)
-
-  // / is always public — no redirect for authenticated users
 
   return supabaseResponse;
 }

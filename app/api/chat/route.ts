@@ -4,9 +4,25 @@ import type { ChatCompletionMessageParam } from "openai/resources/chat/completio
 import { tools, executeTool } from "@/lib/chat/tools";
 import { getSystemPrompt } from "@/lib/chat/system-prompt";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { ajChat } from "@/lib/arcjet";
+import { tokenBucket, request as ajRequest } from "@arcjet/next";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const DASH_LIMIT = 20;
+
+// Tools that mutate project data and require a session log
+const WRITE_TOOLS = new Set([
+  "create_project",
+  "update_project",
+  "delete_project",
+  "create_step",
+  "update_step",
+  "delete_step",
+  "move_step",
+  "move_step_to",
+  "create_link",
+  "delete_link",
+]);
 
 export async function POST(req: Request) {
   try {
@@ -37,6 +53,37 @@ export async function POST(req: Request) {
       return Response.json({ message: "Unauthorized." }, { status: 401 });
     }
 
+    // ── Arcjet protection ───────────────────────────────────────────────────
+    // Add a per-user token bucket on top of the IP-level bucket in ajChat.
+    // This means a single authenticated user can't exhaust the quota for others.
+    const aj = ajChat.withRule(
+      tokenBucket({
+        mode: "LIVE",
+        characteristics: ["userId"],
+        refillRate: 3,  // 3 messages per minute per user sustained
+        interval: 60,
+        capacity: 6,    // burst up to 6 before throttling
+      })
+    );
+    const arcjetReq = await ajRequest();
+    const decision = await aj.protect(arcjetReq, { userId: user.id, requested: 1 });
+
+    if (decision.isDenied()) {
+      if (decision.reason.isRateLimit()) {
+        return Response.json(
+          { message: "Too many requests. Please wait a moment before sending another message." },
+          { status: 429 }
+        );
+      }
+      if (decision.reason.isBot()) {
+        return Response.json(
+          { message: "Automated requests are not allowed." },
+          { status: 403 }
+        );
+      }
+      return Response.json({ message: "Request blocked." }, { status: 403 });
+    }
+
     const isOwner = user.email === process.env.OWNER_EMAIL;
     const userName: string | null = isOwner
       ? (user.user_metadata?.full_name || user.user_metadata?.name || "Andres")
@@ -44,7 +91,6 @@ export async function POST(req: Request) {
 
     // ── Guest limits ────────────────────────────────────────────────────────
     if (!isOwner) {
-      // Upsert guest_limits row on first visit
       await supabaseAdmin
         .from("guest_limits" as never)
         .upsert({ user_id: user.id }, { onConflict: "user_id", ignoreDuplicates: true } as never);
@@ -63,18 +109,27 @@ export async function POST(req: Request) {
       }
     }
 
-    // ── Tool-calling loop ───────────────────────────────────────────────────
-    const { messages } = (await req.json()) as { messages: ChatCompletionMessageParam[] };
+    // ── Build conversation history ──────────────────────────────────────────
+    const { messages, memory } = (await req.json()) as { messages: ChatCompletionMessageParam[]; memory?: string };
     const context = { userId: user.id, isOwner };
 
     const history: ChatCompletionMessageParam[] = [
       {
         role: "system",
-        content: getSystemPrompt(new Date().toISOString().split("T")[0], userName, isOwner),
+        content: getSystemPrompt(new Date().toISOString().split("T")[0], userName, isOwner, memory),
       },
       ...messages,
     ];
 
+    // ── Log enforcer state — tracked from tool calls this turn ──────────────
+    const calledWriteTools = new Set<string>();
+    let activeProjectId: string | null = null;
+    let modelCreatedLog = false;
+
+    // ── Memory update — captured from save_memory tool calls ─────────────────
+    let memoryUpdate: { facts: string[]; replace: boolean } | null = null;
+
+    // ── Tool-calling loop ───────────────────────────────────────────────────
     let finalMessage = "";
 
     for (let i = 0; i < 20; i++) {
@@ -92,13 +147,29 @@ export async function POST(req: Request) {
       if (choice.finish_reason === "stop") {
         finalMessage = choice.message.content ?? "";
 
+        // ── Log enforcer — fallback only when model skipped the log ────────
+        // Fires only if: writes happened, model didn't create a log, and we
+        // have a valid project ID captured from the tool call arguments.
+        if (calledWriteTools.size > 0 && !modelCreatedLog && activeProjectId) {
+          const ops = Array.from(calledWriteTools).join(", ");
+          await executeTool(
+            "create_log",
+            {
+              project_id: activeProjectId,
+              summary: `Session recorded by system. Operations performed: ${ops}.`,
+              agent: "Dash",
+            },
+            context
+          );
+        }
+
         // Increment guest message count on successful completion
         if (!isOwner) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await (supabaseAdmin as any).rpc("increment_dash_messages", { p_user_id: user.id });
         }
 
-        return Response.json({ message: finalMessage });
+        return Response.json({ message: finalMessage, memoryUpdate });
       }
 
       if (choice.finish_reason === "tool_calls" && choice.message.tool_calls) {
@@ -107,6 +178,41 @@ export async function POST(req: Request) {
           const fn = (toolCall as any).function as { name: string; arguments: string };
           const args = JSON.parse(fn.arguments) as Record<string, unknown>;
           const result = await executeTool(fn.name, args, context);
+
+          // Track writes and resolve project ID from call arguments
+          if (WRITE_TOOLS.has(fn.name)) {
+            calledWriteTools.add(fn.name);
+
+            // project_id is present on step and link tools
+            if (typeof args.project_id === "string") {
+              activeProjectId = args.project_id;
+            }
+            // id is the project id on update_project and delete_project
+            if ((fn.name === "update_project" || fn.name === "delete_project") && typeof args.id === "string") {
+              activeProjectId = args.id;
+            }
+            // create_project returns the new project — extract id from result
+            if (fn.name === "create_project") {
+              const match = result.match(/"id":"([0-9a-f-]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"/);
+              if (match) activeProjectId = match[1];
+            }
+          }
+
+          // Track whether the model created its own log this turn
+          if (fn.name === "create_log") {
+            modelCreatedLog = true;
+          }
+
+          // Capture memory update from save_memory tool
+          if (fn.name === "save_memory") {
+            try {
+              const parsed = JSON.parse(result) as { __memory_update__: string[]; replace: boolean };
+              if (parsed.__memory_update__) {
+                memoryUpdate = { facts: parsed.__memory_update__, replace: parsed.replace ?? false };
+              }
+            } catch { /* ignore parse errors */ }
+          }
+
           history.push({
             role: "tool",
             tool_call_id: toolCall.id,

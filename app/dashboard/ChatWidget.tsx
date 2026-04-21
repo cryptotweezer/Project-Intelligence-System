@@ -3,6 +3,32 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
 type Message = { role: "user" | "assistant"; content: string };
+type Memory = { facts: string[]; updatedAt: string };
+
+const MEMORY_KEY = "dash-memory";
+const MAX_MEMORY_FACTS = 25;
+
+function loadMemory(): Memory {
+  if (typeof window === "undefined") return { facts: [], updatedAt: "" };
+  try {
+    const raw = localStorage.getItem(MEMORY_KEY);
+    return raw ? (JSON.parse(raw) as Memory) : { facts: [], updatedAt: "" };
+  } catch { return { facts: [], updatedAt: "" }; }
+}
+
+function saveMemory(incoming: { facts: string[]; replace: boolean }) {
+  const current = loadMemory();
+  const next = incoming.replace
+    ? incoming.facts
+    : [...current.facts, ...incoming.facts].slice(-MAX_MEMORY_FACTS);
+  const deduped = Array.from(new Set(next));
+  localStorage.setItem(MEMORY_KEY, JSON.stringify({ facts: deduped, updatedAt: new Date().toISOString().split("T")[0] }));
+}
+
+function memoryToString(mem: Memory): string | undefined {
+  if (!mem.facts.length) return undefined;
+  return mem.facts.map((f) => `- ${f}`).join("\n");
+}
 
 // Renders assistant message: strips markdown, makes URLs clickable blue links
 function MessageContent({ text }: { text: string }) {
@@ -156,13 +182,15 @@ export default function ChatWidget({ userId, isOwner }: { userId: string; isOwne
     setLoading(true);
 
     try {
+      const mem = loadMemory();
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nextMessages }),
+        body: JSON.stringify({ messages: nextMessages, memory: memoryToString(mem) }),
       });
-      const data = (await res.json()) as { message: string };
+      const data = (await res.json()) as { message: string; memoryUpdate?: { facts: string[]; replace: boolean } | null };
       setIsOnline(true);
+      if (data.memoryUpdate) saveMemory(data.memoryUpdate);
       setMessages([...nextMessages, { role: "assistant", content: data.message }]);
     } catch {
       setIsOnline(false);

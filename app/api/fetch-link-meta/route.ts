@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchLinkMetadata } from "@/lib/links/metadata";
+import { ajLinkMeta } from "@/lib/arcjet";
+import { request as ajRequest } from "@arcjet/next";
 
 export async function POST(req: NextRequest) {
+  // ── Arcjet protection ─────────────────────────────────────────────────────
+  const arcjetReq = await ajRequest();
+  const decision = await ajLinkMeta.protect(arcjetReq, { requested: 1 });
+
+  if (decision.isDenied()) {
+    return NextResponse.json(
+      { error: "Too many requests. Please slow down." },
+      { status: 429 }
+    );
+  }
+
   const body = await req.json().catch(() => null);
   const url = body?.url;
 

@@ -94,7 +94,7 @@ function SortableStep({
         transition: "opacity 0.2s ease",
       }}
     >
-      <div className="flex items-start gap-3 py-3 px-3">
+      <div className="flex items-start gap-2 py-3 px-3">
         {/* Drag handle */}
         <div
           {...attributes}
@@ -135,7 +135,7 @@ function SortableStep({
           </span>
         </div>
 
-        {/* Content */}
+        {/* Content + mobile controls */}
         <div className="flex-1 min-w-0">
           <div
             className="font-light text-sm"
@@ -152,10 +152,15 @@ function SortableStep({
               {step.notes}
             </div>
           )}
+          {/* Controls below text on mobile */}
+          <div className="flex items-center gap-2 mt-2 sm:hidden">
+            <StepStatusSelect stepId={step.id} projectId={projectId} currentStatus={step.status} />
+            <DeleteStepButton stepId={step.id} projectId={projectId} />
+          </div>
         </div>
 
-        {/* Status + delete */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Status + delete — desktop only */}
+        <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
           <StepStatusSelect stepId={step.id} projectId={projectId} currentStatus={step.status} />
           <DeleteStepButton stepId={step.id} projectId={projectId} />
         </div>

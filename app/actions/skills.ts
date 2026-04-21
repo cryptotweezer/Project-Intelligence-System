@@ -63,7 +63,7 @@ export async function updateSkill(
     .eq("user_id", user.id);
 
   if (error) return { error: error.message };
-  revalidatePath("/dashboard/skills");
+  revalidatePath("/dashboard/skills", "layout");
   return {};
 }
 

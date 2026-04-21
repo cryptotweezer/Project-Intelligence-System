@@ -220,6 +220,7 @@ export default function DashboardShell({
                   <img
                     src={user.avatarUrl}
                     alt="avatar"
+                    referrerPolicy="no-referrer"
                     style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid var(--border-subtle)" }}
                   />
                 ) : (

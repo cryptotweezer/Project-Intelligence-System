@@ -216,6 +216,16 @@ export async function updateStepNotes(stepId: string, notes: string, projectId: 
   revalidatePath("/dashboard/projects", "layout");
 }
 
+export async function deleteNote(id: string, projectSlug: string): Promise<void> {
+  const user = await getCurrentUser();
+  if (!user) return;
+
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from("project_notes") as any).delete().eq("id", id).eq("user_id", user.id);
+  revalidatePath(`/dashboard/projects/${projectSlug}`);
+}
+
 export async function reactivateProject(projectId: string): Promise<void> {
   const user = await getCurrentUser();
   if (!user) return;

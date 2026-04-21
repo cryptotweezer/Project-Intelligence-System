@@ -194,11 +194,24 @@ function OverlayCard({ project }: { project: ProjectWithSteps }) {
   );
 }
 
-export default function OverviewProjectList({ projects }: { projects: ProjectWithSteps[] }) {
+type StatusFilter = "all" | "active" | "paused";
+
+export default function OverviewProjectList({
+  projects,
+  activeCount,
+  completedCount,
+  pausedCount,
+}: {
+  projects: ProjectWithSteps[];
+  activeCount: number;
+  completedCount: number;
+  pausedCount: number;
+}) {
   const [sortMode, setSortMode]           = useState<SortMode>("urgency");
   const [ordered, setOrdered]             = useState<ProjectWithSteps[]>(() => sortByUrgency(projects));
   const [activeId, setActiveId]           = useState<string | null>(null);
   const [hasSavedOrder, setHasSavedOrder] = useState(false);
+  const [statusFilter, setStatusFilter]   = useState<StatusFilter>("all");
 
   useEffect(() => {
     const { mode, ordered: restored } = loadSavedSort(projects);
@@ -255,13 +268,53 @@ export default function OverviewProjectList({ projects }: { projects: ProjectWit
   const activeProject = activeId ? ordered.find((p) => p.id === activeId) : null;
 
   const sortButtons: { mode: SortMode; label: string }[] = [
-    { mode: "urgency", label: "BY URGENCY" },
-    { mode: "date",    label: "BY DATE" },
+    { mode: "urgency", label: "URGENCY" },
+    { mode: "date",    label: "NEWEST" },
     { mode: "manual",  label: "CUSTOM" },
   ];
 
+  const visible = statusFilter === "all"
+    ? ordered
+    : ordered.filter((p) => p.status === statusFilter);
+
+  function statButton(filter: StatusFilter, label: string, count: number, color?: string) {
+    const isActive = statusFilter === filter;
+    return (
+      <button
+        onClick={() => setStatusFilter(isActive ? "all" : filter)}
+        className="px-6 py-4 transition-opacity duration-150 hover:opacity-80 text-left"
+        style={{
+          background: "var(--bg-card)",
+          border: isActive ? "1px solid var(--accent)" : "1px solid var(--border-subtle)",
+          cursor: "pointer",
+        }}
+      >
+        <div className="font-label text-outline mb-1" style={{ fontSize: "0.55rem", letterSpacing: "0.2em" }}>
+          {label}
+        </div>
+        <div className="font-display text-2xl" style={{ letterSpacing: "-0.02em", color: color ?? "var(--accent)" }}>
+          {count}
+        </div>
+      </button>
+    );
+  }
+
   return (
     <>
+      {/* Stats */}
+      <div className="flex flex-wrap gap-4 mb-8 md:mb-10">
+        {statButton("active", "ACTIVE", activeCount)}
+        <a
+          href="/dashboard/completed"
+          className="px-6 py-4 transition-opacity duration-150 hover:opacity-80"
+          style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
+        >
+          <div className="font-label text-outline mb-1" style={{ fontSize: "0.55rem", letterSpacing: "0.2em" }}>COMPLETED</div>
+          <div className="font-display text-2xl" style={{ letterSpacing: "-0.02em", color: "var(--accent)" }}>{completedCount}</div>
+        </a>
+        {pausedCount > 0 && statButton("paused", "PAUSED", pausedCount, "rgba(209,188,255,0.7)")}
+      </div>
+
       <SortControls
         sortMode={sortMode}
         hasSavedOrder={hasSavedOrder}
@@ -269,12 +322,12 @@ export default function OverviewProjectList({ projects }: { projects: ProjectWit
         onActivate={activateMode}
       />
 
-      {ordered.length === 0 ? (
+      {visible.length === 0 ? (
         <div className="p-12 text-center" style={{ border: "1px solid var(--border-subtle)" }}>
           <div className="font-label text-outline" style={{ fontSize: "0.65rem", letterSpacing: "0.2em" }}>
-            NO PROJECTS FOUND
+            {ordered.length === 0 ? "NO PROJECTS FOUND" : `NO ${statusFilter.toUpperCase()} PROJECTS`}
           </div>
-          <p className="text-outline font-light text-sm mt-2">Initialize your first project to begin.</p>
+          {ordered.length === 0 && <p className="text-outline font-light text-sm mt-2">Initialize your first project to begin.</p>}
         </div>
       ) : (
         <DndContext
@@ -283,9 +336,9 @@ export default function OverviewProjectList({ projects }: { projects: ProjectWit
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={ordered.map((p) => p.id)} strategy={rectSortingStrategy}>
+          <SortableContext items={visible.map((p) => p.id)} strategy={rectSortingStrategy}>
             <div data-tour="project-cards" className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-2">
-              {ordered.map((project) => (
+              {visible.map((project) => (
                 <SortableCard key={project.id} project={project} />
               ))}
             </div>

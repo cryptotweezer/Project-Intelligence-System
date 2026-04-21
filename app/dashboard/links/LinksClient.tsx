@@ -65,23 +65,6 @@ function AddLinkForm() {
       style={{ borderTop: "1px solid var(--border-subtle)" }}
     >
       <div className="flex gap-2 items-center">
-        <input
-          type="url"
-          value={url}
-          onChange={(e) => { setUrl(e.target.value); setError(null); setOk(false); }}
-          onKeyDown={(e) => e.key === "Enter" && handleSave()}
-          placeholder="Paste a link to save..."
-          style={{
-            flex: 1,
-            background: "transparent",
-            border: "none",
-            borderBottom: "1px solid var(--border)",
-            color: "var(--text-primary)",
-            padding: "6px 0",
-            fontSize: "16px",
-            outline: "none",
-          }}
-        />
         <button
           onClick={handleSave}
           disabled={!url.trim() || saving}
@@ -101,6 +84,23 @@ function AddLinkForm() {
         >
           {saving ? "..." : ok ? "SAVED" : "SAVE"}
         </button>
+        <input
+          type="url"
+          value={url}
+          onChange={(e) => { setUrl(e.target.value); setError(null); setOk(false); }}
+          onKeyDown={(e) => e.key === "Enter" && handleSave()}
+          placeholder="Paste a link to save..."
+          style={{
+            flex: 1,
+            background: "transparent",
+            border: "none",
+            borderBottom: "1px solid var(--border)",
+            color: "var(--text-primary)",
+            padding: "6px 0",
+            fontSize: "16px",
+            outline: "none",
+          }}
+        />
       </div>
       {error && (
         <div className="font-label text-ruby-red mt-2" style={{ fontSize: "0.58rem", letterSpacing: "0.06em" }}>

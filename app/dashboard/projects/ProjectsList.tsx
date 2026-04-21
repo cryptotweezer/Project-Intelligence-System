@@ -152,8 +152,8 @@ export default function ProjectsList({ projects }: { projects: ProjectWithRelati
   }
 
   const sortButtons: { mode: SortMode; label: string }[] = [
-    { mode: "urgency", label: "BY URGENCY" },
-    { mode: "date",    label: "BY DATE" },
+    { mode: "urgency", label: "URGENCY" },
+    { mode: "date",    label: "NEWEST" },
     { mode: "manual",  label: "CUSTOM" },
   ];
 

@@ -13,6 +13,7 @@ import PrioritySelect from "@/app/dashboard/PrioritySelect";
 import StatusSelect from "@/app/dashboard/StatusSelect";
 import AgentSelect from "@/app/dashboard/AgentSelect";
 import StepsList from "@/app/dashboard/StepsList";
+import DeleteNoteButton from "@/app/dashboard/DeleteNoteButton";
 
 function PriorityBadge({ priority }: { priority: string }) {
   const cls =
@@ -49,7 +50,7 @@ export default async function ProjectDetailPage({
 
   const p = project as Project;
 
-  const [{ data: steps }, { data: logs }, { data: links }] = await Promise.all([
+  const [{ data: steps }, { data: logs }, { data: links }, { data: notes }] = await Promise.all([
     supabase
       .from("project_steps")
       .select("*")
@@ -65,11 +66,17 @@ export default async function ProjectDetailPage({
       .select("*")
       .eq("project_id", p.id)
       .order("created_at"),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.from("project_notes") as any)
+      .select("*")
+      .eq("project_id", p.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   const stepList = (steps ?? []) as ProjectStep[];
   const logList = (logs ?? []) as ProjectLog[];
   const linkList = (links ?? []) as ProjectLink[];
+  const noteList = (notes ?? []) as { id: string; title: string | null; content: string; agent: string; created_at: string }[];
   const pct = p.completion_pct ?? 0;
   const stepsDone = stepList.filter((s) => s.status === "done").length;
   const stepsPending = stepList.filter((s) => s.status !== "done").length;
@@ -146,6 +153,53 @@ export default async function ProjectDetailPage({
               value={p.expected_result}
               placeholder="Click to define the expected result..."
             />
+          </div>
+
+          {/* Notes */}
+          <div
+            className="p-5"
+            style={{ background: "var(--bg-card)", border: "1px solid rgba(209,188,255,0.12)" }}
+          >
+            <div className="font-label mb-4" style={{ fontSize: "0.5rem", letterSpacing: "0.2em", color: "#d1bcff" }}>
+              NOTES
+            </div>
+            {noteList.length === 0 ? (
+              <p className="font-light text-xs" style={{ color: "var(--text-dim)" }}>
+                No notes yet. Ask Dash to save research, findings, or insights from your conversations.
+              </p>
+            ) : (
+              <div className="space-y-5" style={{ maxHeight: "480px", overflowY: "auto", paddingRight: "4px" }}>
+                {noteList.map((note, i) => (
+                  <div
+                    key={note.id}
+                    className="pb-5"
+                    style={{ borderBottom: i < noteList.length - 1 ? "1px solid var(--border-faint)" : "none" }}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div>
+                        {note.title && (
+                          <div className="font-label mb-1" style={{ fontSize: "0.58rem", letterSpacing: "0.06em", color: "var(--text-primary)" }}>
+                            {note.title}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="font-label" style={{ fontSize: "0.45rem", letterSpacing: "0.1em", color: "#d1bcff", opacity: 0.7 }}>
+                            {note.agent}
+                          </span>
+                          <span className="font-label text-outline" style={{ fontSize: "0.45rem", letterSpacing: "0.08em" }}>
+                            {new Date(note.created_at).toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" })}
+                          </span>
+                        </div>
+                      </div>
+                      <DeleteNoteButton noteId={note.id} projectSlug={params.slug} />
+                    </div>
+                    <p className="font-light text-xs leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text-secondary)" }}>
+                      {note.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Progress */}

@@ -182,8 +182,15 @@ function SkillEditFormInner({ skill, onCancel }: { skill: Skill; onCancel: () =>
     startSaving(async () => {
       const result = await updateSkill(skill.id, { name, command, description: description || undefined, content, is_active: isActive });
       if (result.error) { setError(result.error); return; }
-      setSaved(true);
-      setTimeout(() => { setSaved(false); onCancel(); }, 1200);
+      const normalizedCommand = command.startsWith("/") ? command.toLowerCase() : `/${command.toLowerCase()}`;
+      const newSlug = normalizedCommand.slice(1);
+      const commandChanged = newSlug !== skill.command.slice(1);
+      if (commandChanged) {
+        router.push(`/dashboard/skills/${newSlug}`);
+      } else {
+        setSaved(true);
+        setTimeout(() => { setSaved(false); onCancel(); }, 1200);
+      }
     });
   }
 

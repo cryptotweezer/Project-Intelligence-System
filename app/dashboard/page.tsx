@@ -74,70 +74,13 @@ export default async function DashboardOverview() {
         />
       </div>
 
-      {/* Global Stats */}
-      <div className="flex flex-wrap gap-4 mb-8 md:mb-10">
-        <a
-          href="/dashboard/projects"
-          className="px-6 py-4 transition-opacity duration-150 hover:opacity-80"
-          style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
-        >
-          <div
-            className="font-label text-outline mb-1"
-            style={{ fontSize: "0.55rem", letterSpacing: "0.2em" }}
-          >
-            ACTIVE
-          </div>
-          <div
-            className="font-display text-electric-blue text-2xl"
-            style={{ letterSpacing: "-0.02em" }}
-          >
-            {activeCount}
-          </div>
-        </a>
-
-        <a
-          href="/dashboard/completed"
-          className="px-6 py-4 transition-opacity duration-150 hover:opacity-80"
-          style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
-        >
-          <div
-            className="font-label text-outline mb-1"
-            style={{ fontSize: "0.55rem", letterSpacing: "0.2em" }}
-          >
-            COMPLETED
-          </div>
-          <div
-            className="font-display text-electric-blue text-2xl"
-            style={{ letterSpacing: "-0.02em" }}
-          >
-            {completedCount ?? 0}
-          </div>
-        </a>
-
-        {(pausedCount ?? 0) > 0 && (
-          <a
-            href="/dashboard/projects"
-            className="px-6 py-4 transition-opacity duration-150 hover:opacity-80"
-            style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
-          >
-            <div
-              className="font-label text-outline mb-1"
-              style={{ fontSize: "0.55rem", letterSpacing: "0.2em" }}
-            >
-              PAUSED
-            </div>
-            <div
-              className="font-display text-2xl"
-              style={{ letterSpacing: "-0.02em", color: "rgba(209,188,255,0.7)" }}
-            >
-              {pausedCount}
-            </div>
-          </a>
-        )}
-      </div>
-
-      {/* Project list — sortable + drag-and-drop */}
-      <OverviewProjectList projects={allProjects} />
+      {/* Project list — stats + filter + sortable + drag-and-drop */}
+      <OverviewProjectList
+        projects={allProjects}
+        activeCount={activeCount}
+        completedCount={completedCount ?? 0}
+        pausedCount={pausedCount ?? 0}
+      />
     </div>
   );
 }
