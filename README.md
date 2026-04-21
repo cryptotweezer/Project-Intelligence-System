@@ -2,7 +2,7 @@
 
 An AI-native project management dashboard built around a single idea: the database is the interface. Every project lives in Supabase — structured, queryable, and fully readable by any AI tool. Switch between Claude Code, Cursor, Windsurf, or any MCP-connected AI without losing context. Each tool picks up exactly where the last one left off.
 
-**Live demo:** [pis.andreshenao.com.au](https://pis.andreshenao.com.au)  
+**Live demo:** [intel.andreshenao.com.au](https://intel.andreshenao.com.au)  
 **Built by:** [Andres Henao](https://cv.andreshenao.com.au)
 
 ---

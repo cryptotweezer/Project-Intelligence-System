@@ -689,6 +689,9 @@ export default function HomePage() {
           <p style={{ fontSize: "0.9rem", lineHeight: 1.75, color: "var(--text-muted)" }}>
             Connect any AI tool via the Supabase MCP and it reads your project instantly. Steps, session logs, expected results, priorities, agent history. Everything is there. The context never disappears because it was never just in a chat window.
           </p>
+          <p style={{ fontSize: "0.9rem", lineHeight: 1.75, color: "var(--text-muted)", marginTop: "14px" }}>
+            A ready-made skill file is included in the repo. Drop it into your AI and it understands the full schema, available tools, and how to read and write project data — no setup required.
+          </p>
         </div>
 
         {/* Flow diagram */}

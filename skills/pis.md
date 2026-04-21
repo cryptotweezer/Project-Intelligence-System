@@ -12,7 +12,7 @@
 1. **Dash (GPT-4o widget)** bootstraps projects from natural language — creates the full structure: steps, expected result, reference links, opening log.
 2. **Any MCP-connected AI** (Claude Code, Cursor, Windsurf, etc.) connects to Supabase, reads the full plan, and picks up where Dash left off.
 
-**Live demo:** [pis.andreshenao.com.au](https://pis.andreshenao.com.au)
+**Live demo:** [intel.andreshenao.com.au](https://intel.andreshenao.com.au)
 
 ---
 
