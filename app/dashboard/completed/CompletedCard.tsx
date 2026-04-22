@@ -75,10 +75,10 @@ export default function CompletedCard({ project, expanded, dimmed, onToggle }: P
           <StatusBadge status={project.status} />
         </div>
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-start justify-between gap-3">
           <h2
-            className="font-display"
-            style={{ fontSize: "0.95rem", letterSpacing: "-0.01em", color: "var(--accent-dim)" }}
+            className="font-display min-w-0"
+            style={{ fontSize: "0.95rem", letterSpacing: "-0.01em", color: "var(--accent-dim)", wordBreak: "break-word" }}
           >
             {project.name}
           </h2>

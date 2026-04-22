@@ -184,57 +184,65 @@ export default async function LeadsPage() {
             {leads.map((lead) => (
               <div
                 key={lead.id}
-                className="p-5"
+                className="p-4 sm:p-5"
                 style={{
                   background: "var(--bg-card)",
                   border: "1px solid var(--border-subtle)",
                   borderLeft: "2px solid rgba(59,130,246,0.4)",
                 }}
               >
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <div className="flex items-center gap-3 min-w-0">
+                {/* Name row + delete button */}
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <span
+                    className="font-label"
+                    style={{ fontSize: "0.65rem", letterSpacing: "0.08em", color: "var(--text-primary)", wordBreak: "break-word" }}
+                  >
+                    {lead.name}
+                  </span>
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                     <span
-                      className="font-label"
-                      style={{ fontSize: "0.65rem", letterSpacing: "0.08em", color: "var(--text-primary)" }}
-                    >
-                      {lead.name}
-                    </span>
-                    <span
-                      className="font-label text-outline"
-                      style={{ fontSize: "0.58rem", letterSpacing: "0.04em" }}
-                    >
-                      {lead.email}
-                    </span>
-                    {lead.phone && (
-                      <span
-                        className="font-label text-outline"
-                        style={{ fontSize: "0.55rem", letterSpacing: "0.04em" }}
-                      >
-                        {lead.phone}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <span
-                      className="font-label text-outline"
-                      style={{ fontSize: "0.52rem", letterSpacing: "0.08em" }}
+                      className="font-label text-outline hidden sm:block"
+                      style={{ fontSize: "0.52rem", letterSpacing: "0.08em", whiteSpace: "nowrap" }}
                     >
                       {formatDate(lead.created_at)}
                     </span>
                     <DeleteLeadButton id={lead.id} />
                   </div>
                 </div>
+                {/* Contact info + mobile date */}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
+                  <span
+                    className="font-label text-outline"
+                    style={{ fontSize: "0.58rem", letterSpacing: "0.04em", wordBreak: "break-all" }}
+                  >
+                    {lead.email}
+                  </span>
+                  {lead.phone && (
+                    <span
+                      className="font-label text-outline"
+                      style={{ fontSize: "0.55rem", letterSpacing: "0.04em" }}
+                    >
+                      {lead.phone}
+                    </span>
+                  )}
+                  <span
+                    className="font-label text-outline sm:hidden"
+                    style={{ fontSize: "0.52rem", letterSpacing: "0.08em" }}
+                  >
+                    {formatDate(lead.created_at)}
+                  </span>
+                </div>
                 {lead.subject && (
                   <div
                     className="font-label mb-2"
-                    style={{ fontSize: "0.58rem", letterSpacing: "0.06em", color: "#d1bcff" }}
+                    style={{ fontSize: "0.58rem", letterSpacing: "0.06em", color: "#d1bcff", wordBreak: "break-word" }}
                   >
                     {lead.subject}
                   </div>
                 )}
                 <p
                   className="text-outline font-light text-sm leading-relaxed"
-                  style={{ fontSize: "0.8rem" }}
+                  style={{ fontSize: "0.8rem", wordBreak: "break-word" }}
                 >
                   {lead.message}
                 </p>
@@ -288,45 +296,53 @@ export default async function LeadsPage() {
                     : "2px solid var(--border-subtle)",
                 }}
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 min-w-0">
+                {/* Name row + delete button */}
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <span
+                    className="font-label"
+                    style={{ fontSize: "0.65rem", letterSpacing: "0.08em", color: "var(--text-primary)", wordBreak: "break-word" }}
+                  >
+                    {user.name || "—"}
+                  </span>
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                     <span
-                      className="font-label"
-                      style={{ fontSize: "0.65rem", letterSpacing: "0.08em", color: "var(--text-primary)" }}
-                    >
-                      {user.name || "—"}
-                    </span>
-                    <span
-                      className="font-label text-outline"
-                      style={{ fontSize: "0.58rem", letterSpacing: "0.04em" }}
-                    >
-                      {user.email}
-                    </span>
-                    <RoleBadge role={user.role} />
-                    {user.is_first_user && (
-                      <span
-                        className="font-label"
-                        style={{
-                          fontSize: "0.5rem",
-                          letterSpacing: "0.1em",
-                          color: "#3b82f6",
-                          border: "1px solid rgba(59,130,246,0.3)",
-                          padding: "2px 6px",
-                        }}
-                      >
-                        FIRST USER
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <span
-                      className="font-label text-outline"
-                      style={{ fontSize: "0.52rem", letterSpacing: "0.08em" }}
+                      className="font-label text-outline hidden sm:block"
+                      style={{ fontSize: "0.52rem", letterSpacing: "0.08em", whiteSpace: "nowrap" }}
                     >
                       {formatDate(user.created_at)}
                     </span>
                     <DeleteUserButton id={user.id} />
                   </div>
+                </div>
+                {/* Email + badges + mobile date */}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span
+                    className="font-label text-outline"
+                    style={{ fontSize: "0.58rem", letterSpacing: "0.04em", wordBreak: "break-all" }}
+                  >
+                    {user.email}
+                  </span>
+                  <RoleBadge role={user.role} />
+                  {user.is_first_user && (
+                    <span
+                      className="font-label"
+                      style={{
+                        fontSize: "0.5rem",
+                        letterSpacing: "0.1em",
+                        color: "#3b82f6",
+                        border: "1px solid rgba(59,130,246,0.3)",
+                        padding: "2px 6px",
+                      }}
+                    >
+                      FIRST USER
+                    </span>
+                  )}
+                  <span
+                    className="font-label text-outline sm:hidden"
+                    style={{ fontSize: "0.52rem", letterSpacing: "0.08em" }}
+                  >
+                    {formatDate(user.created_at)}
+                  </span>
                 </div>
               </div>
             ))}

@@ -186,6 +186,8 @@ function LinkCard({ link }: { link: SavedLink }) {
             display: "block",
             marginBottom: "6px",
             lineHeight: "1.35",
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
           }}
         >
           {link.title ?? link.url}

@@ -82,7 +82,7 @@ export default async function ProjectDetailPage({
   const stepsPending = stepList.filter((s) => s.status !== "done").length;
 
   return (
-    <div className="p-10 animate-fade-in">
+    <div className="p-4 sm:p-6 md:p-10 animate-fade-in">
       {/* Back */}
       <Link
         href="/dashboard/projects"

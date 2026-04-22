@@ -1105,8 +1105,7 @@ export default function HomePage() {
                     display: "block",
                   }}
                 >
-                  VISIT &#8599;
-                </a>
+                  VISIT                 </a>
               </div>
 
               <p style={{ fontSize: "0.83rem", lineHeight: 1.65, color: "var(--text-muted)", marginBottom: "16px", flex: 1 }}>
@@ -1240,8 +1239,7 @@ export default function HomePage() {
               borderRadius: "4px",
             }}
           >
-            VIEW ON GITHUB &#8599;
-          </a>
+            VIEW ON GITHUB           </a>
         </div>
       </section>
 
@@ -1281,8 +1279,7 @@ export default function HomePage() {
               className="font-label"
               style={{ fontSize: "0.5rem", letterSpacing: "0.12em", color: "var(--text-dim)", textDecoration: "none" }}
             >
-              {link.label} &#8599;
-            </a>
+              {link.label}             </a>
           ))}
         </div>
       </footer>

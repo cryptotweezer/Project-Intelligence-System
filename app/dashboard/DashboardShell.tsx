@@ -36,6 +36,18 @@ export default function DashboardShell({
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { setSidebarOpen(false); }, [pathname]);
 
+  // Tour sidebar control — only fires on mobile (tour dispatches only when width < 768)
+  useEffect(() => {
+    const open  = () => setSidebarOpen(true);
+    const close = () => setSidebarOpen(false);
+    window.addEventListener("pis:sidebar-open",  open);
+    window.addEventListener("pis:sidebar-close", close);
+    return () => {
+      window.removeEventListener("pis:sidebar-open",  open);
+      window.removeEventListener("pis:sidebar-close", close);
+    };
+  }, []);
+
   const navItems = ALL_NAV_ITEMS.filter((item) => !item.ownerOnly || user.isOwner);
 
   async function handleSignOut() {

@@ -105,10 +105,10 @@ export default function ProjectCard({ project, expanded, dimmed, onToggle, dragH
             <StatusSelect projectId={project.id} currentStatus={project.status} />
           </div>
 
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-start justify-between gap-3">
             <h2
-              className="font-display group-hover:text-electric-blue transition-colors duration-150"
-              style={{ color: "var(--text-primary)", fontSize: "0.95rem", letterSpacing: "-0.01em" }}
+              className="font-display group-hover:text-electric-blue transition-colors duration-150 min-w-0"
+              style={{ color: "var(--text-primary)", fontSize: "0.95rem", letterSpacing: "-0.01em", wordBreak: "break-word" }}
             >
               {project.name}
             </h2>
